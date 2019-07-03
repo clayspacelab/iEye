@@ -23,7 +23,7 @@ ii_params = ii_loadparams; % load default set of analysis parameters, only chang
 ii_params.trial_end_value = 6;   % XDAT value for trial end
 ii_params.drift_epoch = [1 2 3]; % XDAT values for drift correction
 ii_params.calibrate_epoch = 5;   % XDAT value for when we calibrate (feedback stim)
-ii_params.calibrate_select_mode = 'nearest'; % how do we select fixation with which to calibrate?
+ii_params.calibrate_select_mode = 'last'; % how do we select fixation with which to calibrate?
 ii_params.calibrate_mode = 'scale'; % scale: trial-by-trial, rescale each trial; 'run' - run-wise polynomial fit
 ii_params.blink_window = [200 200]; % how long before/after blink (ms) to drop?
 ii_params.plot_epoch = [3 4 5];  % what epochs do we plot for preprocessing?
@@ -37,7 +37,6 @@ tmp = mfilename('fullpath'); tmp2 = strfind(tmp,filesep);
 root = tmp(1:(tmp2(end)-1));
 
 edf_prefix = 'exfmri';
-%edf_prefix = 's5_1_';
 edf_files = dir(fullfile(root,sprintf('%s*.edf',edf_prefix)));
 
 % create empty cell array of all our trial data for combination later on
