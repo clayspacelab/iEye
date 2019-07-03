@@ -53,6 +53,7 @@ ii_sess = struct();
 
 % and initialize an empty set of run & trial indices
 % (assume all runs are same size; not strictly true but that's ok below)
+
 r_num = nan(size(ii_trial{1}.i_sacc,1)*length(ii_trial),1);
 t_num = nan(size(ii_trial{1}.i_sacc,1)*length(ii_trial),1);
 

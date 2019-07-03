@@ -10,7 +10,7 @@ function [ii_data,ii_cfg,ii_sacc] = ii_preproc(edf_fn,cfg_fn,preproc_fn,ii_param
 % etc (pixels per degree is required)
 % 03. invert the y-channel, which is measured in screen coords (+ is down)
 % 04. identify and remove blinks
-% 04b (not yet implemented) clean gaze channels if bad values found
+% 04b clean gaze channels if bad values found
 % 05. use the 'XDAT' (epoch) channel to define trials
 % 06. compute smoothed versions of gaze channels using a Gaussian kernel
 % 07. use smoothed gaze channels to compute velocity

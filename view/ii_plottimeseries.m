@@ -89,9 +89,9 @@ end
 
 % hmm...this isn't working, keeps adding other elements. I just want
 % which_chans lines...
-% if ~ismember('nolegend',varargin)
-%     legend(p_han,which_chans,'location','eastoutside');
-% end
+%if ~ismember('nolegend',varargin)
+ %   legend(p_han,which_chans,'location','eastoutside');
+%end
 
 % optimize y-lims
 myy = get(gca,'YLim');
@@ -167,6 +167,10 @@ set(gca,'Position',[0.05 0.2 0.9 0.75],'TickDir','out','LineWidth',1.5,'FontSize
 xlabel('Time (s)');
 ylabel('Channel value');
 xlim([myt(1) myt(end)]);
+
+if ~ismember('nolegend',varargin)
+    legend(p_han,which_chans,'location','eastoutside');
+end
 
 end
 

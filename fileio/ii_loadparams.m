@@ -25,7 +25,7 @@ if nargin < 1
     ii_params.valid_epochs = NaN; % if NaN, don't trim
     
     % stimulus display information
-    ii_params.resolution = [1280 1024]; % Curtis lab, behavior room
+    ii_params.resolution = [1024 768]; % Curtis lab, beha   vior room
     ii_params.ppd = 34.1445;            % Curtis lab, behavior room (pix/deg)
     
     % blink correction
@@ -47,6 +47,7 @@ if nargin < 1
     ii_params.sacc_duration_thresh = 0.0075; % s
     ii_params.sacc_amplitude_thresh = 0.25; % deg
     
+
     % fixation detection (mode for computing fixations)
     ii_params.fixation_mode = 'mean';
     
