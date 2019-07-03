@@ -91,6 +91,14 @@ for rr = 1:length(ru)
         % when did response epoch start? (XDAT=4)
         this_resp_start = myt(find(ismember(ii_trial.XDAT{thisidx(tt)},ii_trial.params.resp_epoch),1,'first'));
         this_resp_end   = myt(find(ismember(ii_trial.XDAT{thisidx(tt)},ii_trial.params.resp_epoch),1,'last'));
+        
+        %control for catch trials where there will be no resp epoch. geh
+        %7/2/19
+        if isempty(this_resp_start)
+            this_resp_start = myt(find(ismember(ii_trial.XDAT{thisidx(tt)},10),1,'first'));
+            this_resp_end = myt(find(ismember(ii_trial.XDAT{thisidx(tt)},10),1,'last'));
+        else
+        end
 
         % TARG positions
         plot([myt(1) myt(end)],[1 1]*ii_trial.targ(thisidx(tt),1),'k--');
@@ -171,6 +179,12 @@ for rr = 1:length(ru)
         
         
         this_trial_end = myt(find(ismember(ii_trial.XDAT{thisidx(tt)},ii_trial.params.resp_epoch(end)+1),1,'last'));
+        
+        %control for catch trials, which do not have same end epoch
+        if isempty(this_trial_end)
+            this_trial_end = 16;
+        else
+        end
         xlim([0 this_trial_end]);
         ylim(plot_params.MAXECC*[-1 1]);
         

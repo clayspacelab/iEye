@@ -76,6 +76,7 @@ tu = unique(ii_cfg.trialvec(ii_cfg.trialvec~=0));
 new_sel = ii_cfg.sel*0;
 
 % TODO: epoch chan?
+%within_epochs =15; 
 epoch_idx = ismember(ii_data.(epoch_chan),within_epochs);
 
 % if necessary, create a vector of fixations - this will be useful for the
