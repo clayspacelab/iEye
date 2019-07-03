@@ -14,9 +14,9 @@
 
 %NOTE: CHANGE MY_DIR TO WHERE YOUR IEYE LIVES
 my_dir = '/Users/grace/GITHUB/iEye_mgrs';
-%ifg_fn = '~/Documents/MATLAB/toolboxes_dev/iEye_ts/examples/p_500hz.ifg';
+
 ifg_fn = [my_dir '/ifg_reach/p_1000hz.ifg'];
-%cd('/Users/grace/GITHUB/iEye_mgrs/fileio/')
+
 ii_params = ii_loadparams; % load default set of analysis parameters, only change what we have to
 
 ii_params.trial_start_value = 11; 
