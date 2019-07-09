@@ -26,7 +26,7 @@ if nargin < 1
 
     ii_plotparams.SACC_COLORS = tmp_lines([4 5],:);% for primary; final saccade overlay
 
-    
+    ii_plotparams.REACH_COLORS = tmp_lines([6 7],:)
     % maximum ecc to which we plot (15 deg is aperture size in scanner)
     ii_plotparams.MAXECC = 15;
     

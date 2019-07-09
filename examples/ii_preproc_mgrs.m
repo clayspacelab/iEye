@@ -91,7 +91,7 @@ end
 % import data
 [ii_data,ii_cfg] = ii_import_edf_mgrs(edf_fn,cfg_fn,[edf_fn(1:end-4) '_iEye.mat']);
 
-
+origdata = checkdata(ii_data,ii_cfg,1)
 [ii_data,ii_cfg, rX,rY] = upsamplereachfile_gh(mgrs_noheader_fn,mgrs_header_fn,ii_data,ii_cfg);
 
 
@@ -100,12 +100,12 @@ end
 
 % rescale X, Y based on screen info
 [ii_data,ii_cfg] = ii_rescale(ii_data,ii_cfg,{'X','Y'},ii_params.resolution,ii_params.ppd);
-
+rescaledata = checkdata(ii_data,ii_cfg,2)
 
 % Invert Y channel (the eye-tracker spits out flipped Y values)
  [ii_data,ii_cfg] = ii_invert(ii_data,ii_cfg,'Y');
 
-
+invertdata = checkdata(ii_data,ii_cfg,3)
 % remove extreme-valued X,Y channels (further than the screen edges)
  [ii_data,ii_cfg] = ii_censorchans(ii_data,ii_cfg,{'X','Y'},...
     {[-0.5 0.5]*ii_params.resolution(1)/ii_params.ppd,...
@@ -116,6 +116,7 @@ end
 [ii_data, ii_cfg] = ii_blinkcorrect(ii_data,ii_cfg,{'X','Y'},'Pupil', ...
        ii_params.blink_thresh,ii_params.blink_window(1),ii_params.blink_window(2),'prctile'); % maybe 50, 50? %altering this 6/1/2017 from 1800 in both x/y 
 
+   blincorrecteddata = checkdata(ii_data,ii_cfg,4)
 
 % split into individual trials (so that individual-trial corrections can be
 % applied)
@@ -128,7 +129,7 @@ end
 [ii_data,ii_cfg] = ii_smooth(ii_data,ii_cfg,{'X','Y'},ii_params.smooth_type,...
     ii_params.smooth_amt);
 
-
+  smoothed_data = checkdata(ii_data,ii_cfg,5)
 % compute velocity using the smoothed data
 [ii_data,ii_cfg] = ii_velocity(ii_data,ii_cfg,'X_smooth','Y_smooth');
 
@@ -151,7 +152,7 @@ end
 % saccades
 
 
-[ii_data,ii_cfg] = ii_findreaches(ii_data,ii_cfg,'rX','rY',... %OG statement
+[ii_data,ii_cfg] = ii_findreaches(ii_data,ii_cfg,'rX','rY',... %OG statement; these params need to be adjust based on reach criteria!
     ii_params.sacc_velocity_thresh,ii_params.sacc_duration_thresh,...
     ii_params.sacc_amplitude_thresh); 
 

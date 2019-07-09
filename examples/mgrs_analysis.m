@@ -7,12 +7,17 @@
 % through preprocessing, saccade extraction, MGS scoring, QC plotting, and
 % some basic analyses/plots
 %
-% Tommy Sprague, 6/12/2018 - subj CC from MGSMap (sess 1, runs 1-3)
+% ORIGINAL DEVELOPMENT:
+%Tommy Sprague, 6/12/2018 - subj CC from MGSMap (sess 1, runs 1-3)
+
+% MODIFIED DEVELOPMENT:
+%Grace Hallenbeck, 6/2019 - to be used for saccade and reach data
+%concomitantly.  
 
 % very first thing we want to do is define all parameters for processing
 % (see ii_loadparams.m for default values)
 
-%NOTE: CHANGE MY_DIR TO WHERE YOUR IEYE LIVES
+%NOTE: CHANGE MY_DIR TO WHERE YOUR iEye_mgrs LIVES %%%%%%%%%%%%%%%%%%%%%%%
 my_dir = '/Users/grace/GITHUB/iEye_mgrs';
 
 ifg_fn = [my_dir '/ifg_reach/p_1000hz.ifg'];
@@ -44,12 +49,11 @@ reach_files = dir(fullfile(mgrs_root,sprintf('%s/reachfiles/%s_header/sess_1/*.t
 % create empty cell array of all our trial data for combination later on
 ii_trial = cell(length(edf_files),1);
 
-
 %mgrs data setup 
+%which subj do we care about? 
+subj= [5]; % this may be amended by adding as many num as participants %eg subj =[1 2 3 4 5]
 
-subj= [5];
-
-for ss =1:length(subj); 
+for ss =1:length(subj)
 for ff =  1:length(edf_files)
     
     % what is the output filename?
@@ -128,33 +132,38 @@ fhr_excl = ii_plotQC_reach_exclusions(ii_sess_reach,ii_cfg,which_excl);
 % - bi: bad initial saccade (duration/amplitude outside range)
 % Also plotted is the response window (vertical gray lines) and the target
 % position (horizontal dashed lines)
+
+%make a quality control dir
+ qc_dir = 'Users/grace/GITHUB/iEye_mgrs/examples/qc_plots' 
+
 fh_trial = ii_plotQC_alltrials(ii_sess,ii_cfg,which_excl);
 fhr_trial = ii_plotQC_all_reach_trials(ii_sess_reach,ii_cfg,which_excl); %do same as above but for reaches
 
+%commenting these out for now, TODO: AMEND THESE FNs 7/8/19
 % often, it's useful to save these out as pngs:
-for ff = 1:length(fh_excl)
-    fn2s = sprintf('%s/%s_QC_excl_%02.f.png',edf_files(1).folder,edf_prefix,ff);
-    saveas(fh_excl(ff),fn2s);
-end
-
-%same for reaches
-% often, it's useful to save these out as pngs:
-for ff = 1:length(fhr_excl)
-    fn2s = sprintf('%s/%s_QC_excl_%02.f.png',reach_files(ff).name(1:(end-4)),ff);
-    saveas(fh_excl(ff),fn2s);
-end
-
-
-for ff = 1:length(fh_trial)
-    fn2s = sprintf('%s/%s_QC_trial_%02.f.png',edf_files(1).folder,edf_prefix,ff);
-    saveas(fh_trial(ff),fn2s);
-end
-
-%same for reaches
-for ff = 1:length(fhr_trial)
-    fn2s = sprintf('%s/%s_QC_trial_%02.f.png',reach_files(ff).name(1:(end-4)),ff);
-    saveas(fh_trial(ff),fn2s);
-end
+% for ff = 1:length(fh_excl)
+%     fn2s = sprintf('%s/eye/%sQC_excl_%02.f.png',qc_dir,edf_prefix,ff);
+%     saveas(fh_excl(ff),fn2s);
+% end
+% 
+% %same for reaches
+% % often, it's useful to save these out as pngs:
+% for ff = 1:length(fhr_excl)
+%     fn2sr = sprintf('%s/reach/%02.f_QC_excl_%02.f.png',qc_dir,subj,ff);
+%     saveas(fhr_excl(ff),fn2sr);
+% end
+% 
+% 
+% for ff = 1:length(fh_trial)
+%     fn2s = sprintf('%s/eye/%s_QC_trial_%02.f.png',qc_dir,edf_prefix,ff);
+%     saveas(fh_trial(ff),fn2s);
+% end
+% 
+% %same for reaches
+% for ff = 1:length(fhr_trial)
+%     fn2s = sprintf('%s/reach/%02.f_QC_trial_%02.f.png',qc_dir,subj(ff),ff);
+%     saveas(fhr_trial(ff),fn2s);
+% end
 
 
 %% now some very basic analysis recipes 
@@ -247,7 +256,7 @@ for pp = 1:length(to_plot)
     scatter(ii_sess.(to_plot{pp})(use_trial==1,1),tmpy,20,mycolors(pp,:),'filled','MarkerFaceAlpha',0.5);
     
     plot(0,0,'k+','MarkerSize',8,'MarkerFaceColor','k');
-    plot(12,0,'kx','MarkerSize',8,'MarkerFaceColor','k');
+    plot(6,0,'kx','MarkerSize',8,'MarkerFaceColor','k'); %changed from 12 on 7/8 
     xlim([-2 15]);
     axis equal off;
     
@@ -388,7 +397,7 @@ for pp = 1:length(to_plot)
     scatter(ii_sess_reach.(to_plot{pp})(use_trial==1,1),tmpy,20,mycolors(pp,:),'filled','MarkerFaceAlpha',0.5);
     
     plot(0,0,'k+','MarkerSize',8,'MarkerFaceColor','k');
-    plot(12,0,'kx','MarkerSize',8,'MarkerFaceColor','k');
+    plot(6,0,'kx','MarkerSize',8,'MarkerFaceColor','k');
     xlim([-2 15]);
     axis equal off;
     

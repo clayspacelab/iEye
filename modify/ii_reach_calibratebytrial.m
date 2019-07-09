@@ -139,7 +139,7 @@ end
 
 % check if .calibrate field already present, warn that you may be
 % double-calibrating
-if ismember('calibrate',fieldnames(ii_cfg))
+if ismember('reach_calibrate',fieldnames(ii_cfg))
     warning('iEye:ii_calibratebytrial:alreadyCalibrated','CALIBRATE field already present in ii_cfg; will overwrite!');
 end
 

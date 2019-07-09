@@ -85,7 +85,7 @@ for rr = 1:length(ru)
         subplot(nrows,ncols,tt);
         hold on;
         
-        myt = (1:length(ii_trial_reach.X{thisidx(tt)})) * SAMPLING_PER;
+        myt = (1:length(ii_trial_reach.rX{thisidx(tt)})) * SAMPLING_PER;
         
         
         % when did response epoch start? (XDAT=4)
@@ -117,16 +117,16 @@ for rr = 1:length(ru)
         % overlay the primary reach
         i_reach_t = (1:size(ii_trial_reach.i_reach_trace{thisidx(tt)},1)) * SAMPLING_PER + this_resp_start + ii_trial_reach.i_reach_rt(thisidx(tt));
         if ~isempty(ii_trial_reach.i_reach_trace{thisidx(tt)})
-            plot(i_reach_t,ii_trial_reach.i_reach_trace{thisidx(tt)}(:,1),'-','LineWidth',2,'Color',plot_params.reach_COLORS(1,:));
-            plot(i_reach_t,ii_trial_reach.i_reach_trace{thisidx(tt)}(:,2),'-','LineWidth',2,'Color',plot_params.reach_COLORS(1,:));
+            plot(i_reach_t,ii_trial_reach.i_reach_trace{thisidx(tt)}(:,1),'-','LineWidth',2,'Color',plot_params.REACH_COLORS(1,:));
+            plot(i_reach_t,ii_trial_reach.i_reach_trace{thisidx(tt)}(:,2),'-','LineWidth',2,'Color',plot_params.REACH_COLORS(1,:));
         end
         
         % and the final reach, if it exists
         if ii_trial_reach.n_reach(thisidx(tt)) >= 2
             f_reach_t = (1:size(ii_trial_reach.f_reach_trace{thisidx(tt)},1)) * SAMPLING_PER + this_resp_start + ii_trial_reach.f_reach_rt(thisidx(tt));
             if ~isempty(ii_trial_reach.f_reach_trace{thisidx(tt)})
-                plot(f_reach_t,ii_trial_reach.f_reach_trace{thisidx(tt)}(:,1),'-','LineWidth',1.5,'Color',plot_params.reach_COLORS(2,:));
-                plot(f_reach_t,ii_trial_reach.f_reach_trace{thisidx(tt)}(:,2),'-','LineWidth',1.5,'Color',plot_params.reach_COLORS(2,:));
+                plot(f_reach_t,ii_trial_reach.f_reach_trace{thisidx(tt)}(:,1),'-','LineWidth',1.5,'Color',plot_params.REACH_COLORS(2,:));
+                plot(f_reach_t,ii_trial_reach.f_reach_trace{thisidx(tt)}(:,2),'-','LineWidth',1.5,'Color',plot_params.REACH_COLORS(2,:));
             end
             
         end

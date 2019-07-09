@@ -1,4 +1,4 @@
-function [fh] = ii_plotQC_reach_exclusions(ii_trial_reach_reach,ii_cfg,which_excl,fig_visible)
+function [fh] = ii_plotQC_reach_exclusions(ii_trial_reach,ii_cfg,which_excl,fig_visible)
 % ii_plotQC_exclusions Plots which trials are excluded [per run] in two
 % plots: (1) 'dot' plot, which indicates which criteria apply to each trial,
 % and (2) bar graph, indicating overall percentage of trials excluded per
