@@ -1,0 +1,93 @@
+# eyetracker_ip = IP address to which eyetracker will be configured. If not applicable, leave blank. Value is commonly 100.1.1.1 Format: string
+100.1.1.1
+---------#
+# calib_type = How many dots used in eyetracker calibration. Options: THREE_POINTS, FIVE_POINTS, NINE_POINTS, or THIRTEEN_POINTS. Format: string
+FIVE_POINTS
+---------#
+# response_key = The number that will be used as the subject's response in the MRI setup. Value can be number or letter. Format: string
+1
+---------#
+# pulse_cue = Feedback that signals a MRI pulse (TTL). Value can be number or letter. Format: string
+5
+---------#
+# background_color = Color of the psychopy window. Be sure to use rsvp_stim_prep.py to process the stimuli accordingly. 1,1,1 = white; -1,-1,-1 = black; 0,0,0 = grey. Format: list
+0,0,0
+---------#
+# text_color = Color of the instruction text. 1,1,1 = white; -1,-1,-1 = black; 0,0,0 = grey. Format: list
+1,1,1
+---------#
+# fix_color = Color of the fixation point. 1,1,1 = white; -1,-1,-1 = black; 0,0,0 = grey. Format: list
+-1,-1,-1
+---------#
+# tr = TR length. Format: float
+1.3
+---------#
+# tr_per_bar = Number of TRs per bar location. Format: int
+2
+---------#
+# n_bars = Number of bar locations used. Format: int
+12
+---------#
+# n_trials = Total number of sweeps to run. Format: int
+8
+---------#
+# targ_rate = The target will have a 1/X chance of being presented in each set. Format: int
+2
+---------#
+# targ_cooldown = The target is only allowed to be presented once every X seconds; must be >= response_period. Format: float
+1
+---------#
+# response_period = Maximum response time allowed in seconds; must be <= targ_cooldown. Format: float
+0.9
+---------#
+# response_delay = Time period starting from the onset of stimuli in which subject cannot respond. This is used to keep a suitable window open for response feedback. Format: float
+0.2
+---------#
+# show_feedback = The fixation will turn green for the remainder of the response period when a subject responds to a target. Format: bool
+True
+---------#
+# feedback_frames = Number of frames to display feedback for. To get duration of feedback in ms, use 1000 * x / 60. Format: int
+9
+---------#
+# calibrate_targ = Display target in peripherals prior to sweep start. Format: bool
+True
+---------#
+# extended_start = When in scanner mode, use extended procedure to begin run. Extended procedure adds manual checkpoint and 9.5s delay. Format: bool
+False
+---------#
+# bore_mask = Hide upper left and upper right image slots while scanning. Format: bool
+False
+---------#
+# constrained_set = Preselected set of images to use as targets. If left blank, entire stimuli set is available for use as targets. Values should be comma separated list, i.e., 1,2,3 Format: list
+0,8,10,26,36,41,91,112,135,146,149,153,159,172,198
+---------#
+# stair_upper = Accuracy at which task becomes more difficult (stimuli duration decreases). Format: float
+80
+---------#
+# stair_lower = Accuracy at which task becomes less difficult (stimuli duration increases). Format: float
+50
+---------#
+# fix_size = The size of the fixation point will be X% the size of the stimuli. Format: float
+10
+---------#
+# save_log = Save detailed log of stimuli presentation and timing, as well as a record of the reaction times for every response. It is recommended to set this to True. Format: bool
+True
+---------#
+# screen_res = Resolution of the display computer. Values should be comma separated list of int values, i.e. Width,Height Format: list
+1920,1080
+---------#
+# stim_bounds = Bounds of the stimuli display. (0,0) at the center of the screen in PsychoPy coordinates. Values should be comma separated list of int values, i.e. Width,Height Format: list
+1080,1080
+---------#
+# screen_height = Height of display computer screen in cm. Format: float
+36.2
+---------#
+# view_dist = Distance from which the subject views the display (total path length from eyes to screen - NYU CBI Internal, 3/2/20). Format: float
+83.5
+---------#
+# disp_units = Units used to display stimuli. Options: pix; deg not yet supported. Format: string
+pix
+---------#
+# testing = Enter performance testing mode. Allows you to determine if frames are being dropped. Format: bool
+False
+---------#
