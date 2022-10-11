@@ -15,8 +15,9 @@
 
 
 tmp = pwd; tmp2 = strfind(tmp,filesep);
-iEye_path = tmp(1:(tmp2(end)-1));
-addpath(genpath(iEye_path));
+direct.master = tmp(1:(tmp2(end)-1));
+direct.iEye = [direct.master '/iEye'];
+addpath(genpath(direct.iEye));
 
 ifg_fn = [tmp '/p_500hz.ifg'];
 

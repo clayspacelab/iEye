@@ -47,8 +47,7 @@ if nargin < 1 || isempty(edf_file)
     if filename==0
         fprintf('User selected cancel\n');
         return
-    end
-    
+    end 
 end
 if nargin < 2 || isempty(ifg_file)
     [filename_ifg, pathname] = uigetfile('*.ifg', 'Select IFG file');
@@ -58,16 +57,12 @@ if nargin < 2 || isempty(ifg_file)
         fprintf('User selected cancel\n');
         return
     end
-
-    
 end
 
 
 
 if nargin < 3
-    
    data_file = sprintf('%s_iEye.mat',edf_file(1:(end-4)));
-    
 end
 
 if isempty(data_file)
@@ -110,13 +105,10 @@ s_num = M(:,1);
 x = M(:,2);
 y = M(:,3);
 pupil = M(:,4);
-
 delete (asc_samp_file);
 
 % EXTRACT EVENTS
-
 [status,result] = system(['edf2asc -t -c -e -miss 0 ' edf_file]);
-
 disp(status);
 disp(result);
 asc_evnt_file = strrep(edf_file, '.edf', '.asc');
@@ -152,7 +144,6 @@ for i = 4:nchan
     
     for v = 1:length(varbl)
         dm = strcmpi(varbl(v),cname); % TS: no longer case-sensitive!!!
-        
         if dm == 1
             MV(mline,:) = [samp_n(v) vval(v)];
             mline = mline + 1;
@@ -214,12 +205,8 @@ ii_cfg.tsel = x*0;
 ii_cfg.tindex = 0;
 ii_cfg.saccades = [];
 ii_cfg.history{1} = ['EDF imported ', dt];
-
 ii_cfg.edf_file = edf_file;
-
 ii_cfg.microsacc =[]; 
-
-
 ii_data = eyedata;
 
 % SAVE FILE

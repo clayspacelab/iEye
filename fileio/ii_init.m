@@ -9,10 +9,18 @@ function ii_init()
 % setpref('iEye_ts','edf2asc_path','/path/to/your/binary');
 %
 % TODO: somehow do an automatic git pull from master at init?
+[ret, hostname] = system('hostname');
+if ret ~= 0
+    hostname = getenv('hostname');
+end
+hostname = strtrim(hostname);
 
 if ~ispref('iEye','edf2asc_path')
-    edf2asc_path = '/Volumes/hyper/spacebin';
-   %edf2asc_path = '/d/DATA/hyper/spacebin';
+    if strcmp(hostname, 'syndrome')
+        edf2asc_path = '/d/DATA/hyper/spacebin';
+    elseif strcmp(hostname(end-6:end), 'nyu.edu')
+        edf2asc_path = '/Users/mrugankdake/remote/hyper/spacebin'
+    end
 else
     edf2asc_path = getpref('iEye','edf2asc_path');
 end
