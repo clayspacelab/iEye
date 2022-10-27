@@ -19,7 +19,7 @@ if ~ispref('iEye','edf2asc_path')
     if strcmp(hostname, 'syndrome')
         edf2asc_path = '/d/DATA/hyper/spacebin';
     elseif strcmp(hostname(end-6:end), 'nyu.edu')
-        edf2asc_path = '/Users/mrugankdake/remote/hyper/spacebin'
+        edf2asc_path = '/Users/mrugankdake/remote/hyper/spacebin';
     end
 else
     edf2asc_path = getpref('iEye','edf2asc_path');

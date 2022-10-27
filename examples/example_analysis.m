@@ -12,7 +12,7 @@
 % Mrugank Dake, 10/10/2022 - Modified to be run from anywhere.
 % very first thing we want to do is define all parameters for processing
 % (see ii_loadparams.m for default values)
-
+clear; close all; clc;
 
 tmp = pwd; tmp2 = strfind(tmp,filesep);
 iEye_path = tmp(1:(tmp2(end)-1));
