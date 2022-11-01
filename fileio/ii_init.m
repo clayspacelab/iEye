@@ -18,7 +18,7 @@ hostname = strtrim(hostname);
 if ~ispref('iEye','edf2asc_path')
     if strcmp(hostname, 'syndrome')
         edf2asc_path = '/d/DATA/hyper/spacebin';
-    elseif strcmp(hostname(end-6:end), 'nyu.edu')
+    else
         edf2asc_path = '/Users/mrugankdake/remote/hyper/spacebin';
     end
 else
@@ -26,7 +26,6 @@ else
 end
 
 path1 = getenv('PATH');
-%path1 = [path1 ':/Volumes/hyper/spacebin'];
 path1 = [path1 ':' edf2asc_path];
 setenv('PATH', path1);
 clear path1;

@@ -1,4 +1,4 @@
-function [ii_data,ii_cfg] = ii_import_edf(edf_file,ifg_file,data_file, varargin)
+function [ii_data,ii_cfg] = ii_import_edf(edf_file, ifg_file, data_file, varargin)
 %IMPORT EYELINK EDF FILES
 %   This function will import Eyelink EDF files but requires 'edf2asc'
 %   command (from Eyelink) be installed in MATLAB's path. A config (*.ifg)
@@ -49,6 +49,7 @@ if nargin < 1 || isempty(edf_file)
         return
     end 
 end
+
 if nargin < 2 || isempty(ifg_file)
     [filename_ifg, pathname] = uigetfile('*.ifg', 'Select IFG file');
     ifg_file = fullfile(pathname, filename_ifg);
@@ -59,14 +60,12 @@ if nargin < 2 || isempty(ifg_file)
     end
 end
 
-
-
 if nargin < 3
    data_file = sprintf('%s_iEye.mat',edf_file(1:(end-4)));
 end
 
 if isempty(data_file)
-    iEye_file = sprintf('%s_iEye.mat',edf_file(1:(end-4))); %strrep(edf_file, '.edf', '.mat');
+    iEye_file = sprintf('%s_iEye.mat',edf_file(1:(end-4)));
     [filename_data, pathname] = uiputfile(iEye_file, 'Create data file');
     data_file = fullfile(pathname, filename_data);    
     if filename_data==0
@@ -74,7 +73,6 @@ if isempty(data_file)
         return
     end    
 end
-
 
 % GET CONFIG
 [nchan,lchan,schan,cfg] = ii_openifg(ifg_file);
@@ -91,7 +89,7 @@ echan = nchan - 3;
 %if strcmpi(computer(),'MACI64')
 %    [status,result] = system(['edf2asc_x86_64 -t -c -s -miss 0 ' edf_file]);
 %else
-[status,result] = system(['edf2asc -t -c -s -miss 0 ' edf_file]);
+[status,result] = system(['edf2asc -t -c -v -y -s -miss 0 ' edf_file]);
 %end
 disp(status);
 disp(result);
@@ -99,94 +97,96 @@ asc_samp_file = strrep(edf_file, '.edf', '.asc');
 
 fid = fopen(asc_samp_file,'r');
 %M = textscan(fid,'%f %f %f %f %*s');
-M = textscan(fid,'%f %f %f %f %*s %*s %*s %*s %*s');
-M = cell2mat(M);
-s_num = M(:,1);
-x = M(:,2);
-y = M(:,3);
-pupil = M(:,4);
+sample_data = textscan(fid,'%f %f %f %f %*s %*s %*s %*s %*s');
 delete (asc_samp_file);
+sample_data = cell2mat(sample_data);
+%s_num = sample_data(:,1);
+%x = sample_data(:,2);
+%y = sample_data(:,3);
+%pupil = sample_data(:,4);
+
 
 % EXTRACT EVENTS
-[status,result] = system(['edf2asc -t -c -e -miss 0 ' edf_file]);
+[status,result] = system(['edf2asc -t -c -v -y -e -miss 0 ' edf_file]);
 disp(status);
 disp(result);
 asc_evnt_file = strrep(edf_file, '.edf', '.asc');
 
 fid = fopen(asc_evnt_file,'r');
-E = textscan(fid,'%s', 'delimiter','\n');
-E = E{1};
+event_data = textscan(fid,'%s', 'delimiter','\n');
+delete(asc_evnt_file);
+event_data = event_data{1};
 mline = 1;
 Mess = {};
 
 % GET MSG EVENTS
-token = strtok(E);
+token = strtok(event_data);
 for v = 1:length(token)
-    dm = strcmpi(token(v),'MSG');
-    if dm == 1
-        Mess(mline) = E(v);
+    val_channame = strcmpi(token(v),'MSG');
+    if val_channame == 1
+        Mess(mline) = event_data(v);
         mline = mline + 1;
     end
 end
 
 Mess = Mess';
-[useless, remain] = strtok(Mess);
+% Using strtok to separate text by first space. This produces samp_n which 
+% has sample number, varbl which has value_holders and vval which has
+% values
+[~, remain] = strtok(Mess);
 [samp_n, remain] = strtok(remain);
 [varbl, vval] = strtok(remain);
 samp_n = str2double(samp_n);
 vval = str2double(vval);
 
-% SEARCH MSG EVENTS FOR VARIABLE
+% SEARCH MSG EVENTS FOR VARIABLES XDAT, TarX and TarY
 for i = 4:nchan
     mline = 1;
-    cname = lchan{1}{i};
-    MV = [];
+    channame = lchan{1}{i};
+    samp_vval = [];
     
     for v = 1:length(varbl)
-        dm = strcmpi(varbl(v),cname); % TS: no longer case-sensitive!!!
-        if dm == 1
-            MV(mline,:) = [samp_n(v) vval(v)];
+        val_channame = strcmpi(varbl(v),channame); % TS: no longer case-sensitive!!!
+        if val_channame == 1
+            samp_vval(mline,:) = [samp_n(v) vval(v)];
             mline = mline + 1;
         end
     end
     
     % GET INDICES & SET VALUES
     li = 1;
-    ci = 1;
+    % ci = 1;
     cv = 0;
-    M(:,(i+1)) = 0;
+    sample_data(:,(i+1)) = 0;
     
-    for h = 1:length(MV)
-        ci = find(M(:,1)==MV(h,1));
-        if isempty(ci) == 0
-            M((ci:length(M)),(i+1)) = MV(h,2);
-            li = ci;
+     % find sample index from samp_vval 1st column in sample_data
+    for h = 1:length(samp_vval)
+        sample_idx = find(sample_data(:,1)==samp_vval(h,1));
+        if ~isempty(sample_idx)
+            sample_data((sample_idx:length(sample_data)),(i+1)) = samp_vval(h,2);
+            li = sample_idx;
         else
-            MV(h,1) = MV(h,1) - 1;
-            ci = find(M(:,1)==MV(h,1));
-            M((ci:length(M)),(i+1)) = MV(h,2);
-            li = ci;
+            samp_vval(h,1) = samp_vval(h,1) - 1;
+            sample_idx = find(sample_data(:,1)==samp_vval(h,1));
+            sample_data((sample_idx:length(sample_data)),(i+1)) = samp_vval(h,2);
+            li = sample_idx;
         end
     end
 end
 
-delete(asc_evnt_file);
-
 % CREATE FILE MATRIX
 
-M(:,1) = [];
+sample_data(:,1) = [];
 
 % also insert channel data into eyedata, to be saved out into data_file
 eyedata = [];
-
-
 for i = 1:nchan
-    cname = lchan{1}{i};
-    cvalue = M(:,i);
-    eyedata.(lchan{1}{i})=M(:,i);
+    channame = lchan{1}{i};
+    cvalue = sample_data(:,i);
+    eyedata.(lchan{1}{i})=sample_data(:,i);
 end
 
-x = M(:,1);
+x = sample_data(:,1);
 
 
 % CREATE II_CFG STRUCT
@@ -210,7 +210,7 @@ ii_cfg.microsacc =[];
 ii_data = eyedata;
 
 % SAVE FILE
-% below focuses on only the necessary variables - M is probably redundant,
+% below focuses on only the necessary variables - sample_data is probably redundant,
 % but some later code may use it so holding onto it for now. both save
 % commands are necessary as it's impossible to save struct fields and
 % variables simultaneously it seems. This *vastly* cuts down on amount of
@@ -220,7 +220,7 @@ ii_data = eyedata;
 % only save if you give a filename, or you don't and don't get output args
 if nargin >= 3 || (nargin<3 && nargout == 0)
     if ~isempty(varargin) && strcmpi(varargin{1},'oldstyle')
-        save(data_file,'ii_cfg','edf_file','M','ii_data');
+        save(data_file,'ii_cfg','edf_file','sample_data','ii_data');
         save(data_file,'-struct','eyedata','-append');
     else % default save state - ii_cfg and ii_data encapsulate all info
         save(data_file,'ii_cfg','ii_data','edf_file');
