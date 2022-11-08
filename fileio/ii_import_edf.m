@@ -78,7 +78,7 @@ end
 [nchan,lchan,schan,cfg] = ii_openifg(ifg_file);
 nchan = str2num(nchan);
 schan = str2num(schan);
-vis = lchan;
+vis = lchan; % mrugank: what's the point of this? 11/01
 lchan = textscan(lchan,'%s','delimiter',',');
 
 echan = nchan - 3;

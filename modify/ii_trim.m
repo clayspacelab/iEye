@@ -33,7 +33,6 @@ else
     if sum(valid_idx==1)==0
         error('iEye_ts:ii_trim:noValidEpochsFound','No valid epochs found');
     else
-        
         % select only valid samples from each field of ii_data
         ii_data = structfun(@(f) f(valid_idx==1),ii_data,'UniformOutput',false);
         
@@ -47,14 +46,8 @@ else
         % add history to ii_cfg
         ii_cfg.history{end+1} = sprintf('ii_trim - used channel %s to select epochs %s on %s ', epoch_chan, valid_str, datestr(now,30));
 
-        
         ii_cfg.trim.(sprintf('orig_%s',epoch_chan)) = ii_data.(epoch_chan);
-        ii_cfg.trim.valid_epochs = valid_epochs;
-        
-        
+        ii_cfg.trim.valid_epochs = valid_epochs;        
     end
-    
 end
-
-
 return

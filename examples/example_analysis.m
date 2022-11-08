@@ -20,7 +20,6 @@ addpath(genpath(iEye_path));
 
 ifg_fn = [tmp '/p_500hz.ifg'];
 
-
 ii_params = ii_loadparams; % load default set of analysis parameters, only change what we have to
 ii_params.valid_epochs =[1 2 3 4 5 6];
 ii_params.trial_end_value = 6;   % XDAT value for trial end
