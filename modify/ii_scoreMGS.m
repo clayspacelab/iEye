@@ -313,7 +313,6 @@ for tt = 1:ii_cfg.numtrials
     t_start = find(ii_cfg.trialvec==tt & ismember(ii_data.XDAT,resp_epoch) ,1,'first')/ii_cfg.hz; 
     
     %% score saccades: find primary/initial; final saccade
-    
     % all saccades that started (and ended?) in resp_epoch on this trial
     this_i_sacc = which_sacc(which_trials==tt);
     

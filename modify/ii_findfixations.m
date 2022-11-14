@@ -83,15 +83,11 @@ for cc = 1:length(fix_chans)
     ii_cfg.lchan{1}{end+1} = new_chan_name;
     
     for ff = 1:size(ii_cfg.cursel,1)
-        
         fix_idx = ii_cfg.cursel(ff,1):ii_cfg.cursel(ff,2);
         ii_data.(new_chan_name)(fix_idx) = fix_fcn(ii_data.(fix_chans{cc})(fix_idx) ) ;
-        
         clear fix_idx;
     end
-    
     clear new_chan_name;
-    
 end
 
 new_chan_str = sprintf('%s_fix ',fix_chans{:});

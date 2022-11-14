@@ -88,29 +88,19 @@ if any(strcmpi(sel_mode,{'all','mode'}))
     end
 end
 
-
-
 for tt = 1:length(tu)
-    
     trial_idx = ii_cfg.trialvec==tu(tt);
-    
     % a discontinuous selection is one for which there is more than one
     % onset OR more than one offset
     % quick check to make sure just one contiguous selection...
     if sum(diff(trial_idx & epoch_idx)==1) > 1 || sum(diff(trial_idx & epoch_idx)==-1) > 1 % this originally checked against 1, but this precludes a trial starting w/ first sample
         error('iEye:ii_selectfixationsbytrial:nonContiguousEpoch', 'On trial %i, epochs non-contiguous',tu(tt));
     end
-    
-    
-    
+
     % if method is last_fixation, find within this trial, within
     % [correct_to_epochs], start of last fixation, select from there to end
     % of last correct_to_epoch.
-    
     if strcmpi(sel_mode,'last') % used for drift correction, calibration
-        
-
-        
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
         last_fix_ind = find(ii_cfg.fixations(:,1)<(epoch_end-buffer_window),1,'last');
@@ -121,14 +111,10 @@ for tt = 1:length(tu)
         new_sel = new_sel|(last_fix_vec==1);
         
         clear last_fix_vec epoch_begin epoch_end last_fix_ind trial_idx;
-        
-        
+
     elseif strcmpi(sel_mode,'first')
-               
-        
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
-
         first_fix_ind = find(ii_cfg.fixations(:,1)>epoch_begin,1,'first');
         
         % select from beginning of this fixation to end of epoch or end of
@@ -139,16 +125,11 @@ for tt = 1:length(tu)
         new_sel = new_sel|(first_fix_vec==1);
         
         clear first_fix_vec epoch_begin epoch_end first_fix_ind trial_idx;
-        
-        
-        
+
     elseif strcmpi(sel_mode,'begin')
         % from beginning of epoch to end of that fixation 
-        
-        
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
-
         first_fix_ind = find(ii_cfg.fixations(:,1)>epoch_begin,1,'first');
         
         first_fix_vec = zeros(size(new_sel));
@@ -157,20 +138,13 @@ for tt = 1:length(tu)
         new_sel = new_sel|(first_fix_vec==1);
         
         clear first_fix_vec epoch_begin epoch_end first_fix_ind trial_idx;
-       
-        
+
     elseif strcmpi(sel_mode,'all') % used for ??? (maybe multiple saccades?)
-        
         % find all fixations that occur within interval 
-        
         new_sel = epoch_idx==1 & trial_idx==1 & all_fixvec==1;
-        
-        
-    
+
     % look for longest fixation within an epoch
     elseif strcmpi(sel_mode,'mode')
-        
-        
         % find all fixations during this epoch, trial
         this_fix = epoch_idx==1 & trial_idx==1 & all_fixvec==1;
         
@@ -189,12 +163,9 @@ for tt = 1:length(tu)
         new_sel(fix_begin(fix_idx):fix_end(fix_idx)) = 1==1;
         
         clear this_fix fix_begin fix_end fix_dur fix_idx;
-    
-    
+
     elseif strcmpi(sel_mode,'nearest')
-        
         % NOTE: this will use FixX, FixY channels!!!!
-        
         if isempty(calibrate_targs)
             error('iEye:ii_selectfixationsbytrial:calibrateCoordsUndefined', 'When using mode "NEAREST", must define target locations for fixation selection');
         end
@@ -203,10 +174,8 @@ for tt = 1:length(tu)
             if length(calibrate_targs) ~= 2
                 error('iEye:ii_selectfixationsbytrial:calibrateCoordsIllDefined', 'When cell provided for calibrate_coords, must name 2 channels defined in ii_data');
             end
-        
             % extract coord on this trial (n_trials x 2) from these
             % channels
-            
             this_targ = [ii_data.(calibrate_targs{1})(trial_idx==1 & epoch_idx==1) ii_data.(calibrate_targs{2})(trial_idx==1 & epoch_idx==1)]; 
             u_targs = unique(this_targ,'rows');
             
@@ -220,51 +189,33 @@ for tt = 1:length(tu)
             clear u_targs this_targ;
             
         elseif isnumeric(calibrate_targs)
-            
             if size(calibrate_targs,1) ~= ii_cfg.numtrials
                 error('iEye:ii_selectfixationsbytrial:calibrateCoordsIllDefined', 'Incorrect size for calibrate_coords: expected %i rows, found %i',ii_cfg.numtrials,size(calibrate_targs,1));
             end
-            
             this_calib_targ = calibrate_targs(tt,:);
-            
         end
-        
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
-        
         trial_epoch_idx = epoch_begin:epoch_end;
-        
         
         % compute distance between fix_channels and this_calib_targ
         this_fix = [ii_data.(fix_channels{1})(trial_idx==1 & epoch_idx==1) ii_data.(fix_channels{2})(trial_idx==1 & epoch_idx==1)];
         this_dist = sqrt(sum((this_fix-this_calib_targ).^2,2));
         
-        
         % select that point for that trial
         min_dist = min(this_dist);
         new_sel(trial_epoch_idx(this_dist==min_dist))=1==1;
-    
         
         clear this_calib_targ epoch_begin epocH_end this_fix this_dist min_dist;
-    
-    
     end
-    
-    
-    
-    
 end
 
 % update cursel field of ii_cfg to match new selections
 ii_cfg.sel = new_sel;
 ii_cfg = ii_updatecursel(ii_cfg);
 
-
 % ordinarily wouldn't put this in history, but because it's used for things
 % like drift correction, etc, makes sense here
 ii_cfg.history{end+1} = sprintf('ii_selectfixationsbytrial - selected epochs %s from chan %s with mode %s - %s',num2str(within_epochs),epoch_chan,sel_mode,datestr(now,30));
-
-
-
 end
 

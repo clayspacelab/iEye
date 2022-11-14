@@ -7,9 +7,5 @@ function ii_cfg = ii_updatecursel(ii_cfg)
 
 startidx = find(diff([0; ii_cfg.sel])== 1);
 endidx   = find(diff([ii_cfg.sel; 0])==-1);
-
-
 ii_cfg.cursel = [startidx endidx];
-
-
 return
