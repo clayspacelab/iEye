@@ -86,7 +86,7 @@ function [ii_trial,ii_cfg] = ii_scoreMGS(ii_data,ii_cfg,ii_sacc,targ_coords,resp
 %   principle, that's not necessary - we can add functionality for that later
 % - also, only a single target coordinate for now: ii_nearestcoord could be
 %   called from here, but let's assume it's already been called
-% - asusming coordinate pairs: X,Y (no support for 1D or 3D, etc, coords) -
+% - assuming coordinate pairs: X,Y (no support for 1D or 3D, etc, coords) -
 %   this is consistent with ii_extractsaccades
 % - for aligning all targets, do we want to scale in polar coords, or
 %   translate in cartesian? [discuss!]
