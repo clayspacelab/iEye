@@ -1,7 +1,7 @@
 function [X, Y, pup,real_error] = generate_XYPupil(correct_coords,s,sacc_arr,feedback_arr,p)
 [isacc_coords,fsacc_coords,real_error] = saccade_coords(correct_coords,p);
 dt = 1/p.ifg_freq;
-t = 1:dt:s*dt-dt;
+t = dt:dt:s*dt;
 X = p.xC;
 Y = p.yC;
 pup = 1200;

@@ -2,15 +2,13 @@
 % Simulates eye-data in the format obtained from ii_import_edf. As of now
 % it is very specific to MD_TMS_EEG/mgs_stimul task. Needs to be
 % generalized, but should be easy.
-function [ii_data, ii_cfg, real_error] = simulate_eyetracking(subjID, day, block)
+function [ii_data, ii_cfg, real_error] = simulate_eyetracking(subjID, block, taskMap)
 %clearvars -except block; close all; clc;
 t_array = [0.5, 2, 3/20, 4-2-3/20, 0.15, 0.7, 0.8];
 p.itiDuration = [2,3];
 p.nTrials = 40;
 p.ifg_freq = 1000;
-taskMap_file = ['/d/DATC/datc/MD_TMS_EEG/data/phosphene_data/sub' num2str(subjID, "%02d") ...
-    '/taskMap_sub' num2str(subjID, "%02d") '_day' num2str(day, "%02d") '_antittype_mirror.mat'];
-load(taskMap_file)
+
 p.trialDuration = sum(t_array) + mean(p.itiDuration);
 %sampleCount = int(p.nTrials * p.trialDuration * ifg_freq);
 p.xC = 960; p.yC = 540;
@@ -34,7 +32,7 @@ for trial = 1:p.nTrials
             s_end = s+iti_now*p.ifg_freq+1;
         end
         ii_data.XDAT(s:s_end) = epoch;
-        if epoch == 5 || epoch == 6
+        if epoch == 5 || epoch == 6 || epoch == 7
             ii_data.TarX(s:s_end) = correct_coords(trial, 1);
             ii_data.TarY(s:s_end) = correct_coords(trial, 2);
         else
@@ -52,11 +50,15 @@ for trial = 1:p.nTrials
         s = s_end;
     end
 end
+
 [X, Y, pup, real_error] = generate_XYPupil(correct_coords,s,sacc_arr,feedback_arr,p);
 %[X, Y, pup] = generate_blinks(X, Y, pup, s);
-ii_data.Pupil = pup;
-ii_data.X = X;
-ii_data.Y = Y;
+ii_data.Pupil = pup';
+ii_data.X = X';
+ii_data.Y = Y';
+ii_data.TarX = ii_data.TarX';
+ii_data.TarY = ii_data.TarY';
+ii_data.XDAT = ii_data.XDAT';
 
 ii_cfg.cursel = [];
 ii_cfg.sel = zeros(s, 1);

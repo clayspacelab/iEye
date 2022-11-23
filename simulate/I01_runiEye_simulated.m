@@ -1,4 +1,4 @@
-function [ii_sess_pro, ii_sess_anti] = I01_runiEye_simulated(direct, taskMap, end_block)
+function [ii_sess_pro, ii_sess_anti, real_error_dict] = I01_runiEye_simulated(subjID, day, direct, taskMap, end_block)
 
 if nargin < 3
     end_block = 10;
@@ -28,9 +28,10 @@ excl_criteria.delay_fix_thresh = 2.5; % if any fixation is this far from 0,0 dur
 
 block_pro = 1;
 block_anti = 1;
+real_error_dict = {};
 for block = 1:end_block
     disp(['Running block ' num2str(block, "%02d")])
-    direct.block = [direct.day '/block' num2str(block,"%02d")];
+    %direct.block = [direct.day '/block' num2str(block,"%02d")];
     
     % Loading task, display and timeReport for the block
 %     matFile_extract = dir(fullfile(direct.block, '*.mat'));
@@ -42,21 +43,23 @@ for block = 1:end_block
 %     trialInfo{block} = timeReport;
     eyecond = taskMap(block).condition;
     
-    edfFileName = parameters.edfFile;
-    edfFile_original = [direct.block filesep edfFileName '.edf'];
+    edfFileName = [num2str(subjID, "%02d") num2str(day, "%02d") '0000'];
+    
+    
+    %edfFile_original = [direct.block filesep edfFileName '.edf'];
     edf_block_fold = [direct.save_eyedata '/block' num2str(block, "%02d")];
     if ~exist(edf_block_fold, 'dir')
         mkdir(edf_block_fold);
     end
-
     edfFile = [edf_block_fold filesep edfFileName '.edf'];
-    copyfile(edfFile_original, edfFile);
     % what is the output filename?
     preproc_fn = edfFile(1:end-4);
+   
     % simulate data
-    [ii_data, ii_cfg, real_error] = simulate_eyetracking(subjID, day, block);
+    [ii_data, ii_cfg, real_error] = simulate_eyetracking(subjID, block, taskMap);
+    
     % run preprocessing!
-    [ii_data, ii_cfg, ii_sacc, real_error] = I02_iipreproc_simulated(preproc_fn, ii_params);
+    [ii_data, ii_cfg, ii_sacc] = I02_iipreproc_simulated(ii_data, ii_cfg, preproc_fn, ii_params);
         
     % score trials
     % default parameters should work fine - but see docs for other
@@ -70,10 +73,12 @@ for block = 1:end_block
     if strcmp(eyecond, 'pro')
         [ii_trial_pro{block_pro},~] = ii_scoreMGS(ii_data,ii_cfg,ii_sacc,[],6,[],excl_criteria,[],'lenient');
         ii_trial_pro{block_pro}.stimVF = taskMap(block).stimVF;
+        real_error_dict.block_pro(block_pro) = real_error;
         block_pro = block_pro+1;
     elseif strcmp(eyecond, 'anti')
         [ii_trial_anti{block_anti},~] = ii_scoreMGS(ii_data,ii_cfg,ii_sacc, [], 6,[],excl_criteria,[],'lenient');
         ii_trial_anti{block_anti}.stimVF = taskMap(block).stimVF;
+        real_error_dict.block_anti(block_anti) = real_error;
         block_anti = block_anti+1;
     end
 end
@@ -112,6 +117,7 @@ else
         end
     end
 end
+
 % For anti trials
 if ~exist("ii_trial_anti", "var")
     ii_sess_anti = [];

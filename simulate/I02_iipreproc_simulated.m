@@ -1,4 +1,4 @@
-function [ii_data,ii_cfg,ii_sacc,real_error] = I02_iipreproc_simulated(preproc_fn,ii_params,trialinfo,skip_steps)
+function [ii_data,ii_cfg,ii_sacc] = I02_iipreproc_simulated(ii_data, ii_cfg, preproc_fn,ii_params,trialinfo,skip_steps)
 % ii_preproc Performs default pre-processing stream
 %
 % For preprocessing saccade data (specifically, memory-guided saccade
