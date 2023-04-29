@@ -194,6 +194,7 @@ for bb = 1:length(list_codes)
     this_ypix = round(ii_params.resolution(2)/2 - this_ypix_direct);
     % Check for indices in sample_data that have this XDAT
     interesting_idx = find(sample_data(:, 4) == this_code);
+    sample_data(interesting_idx, 4) = 4;
     sample_data(interesting_idx, 5) = this_xpix;
     sample_data(interesting_idx, 6) = this_ypix;
 end
