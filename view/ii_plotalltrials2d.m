@@ -1,4 +1,4 @@
-function [ f_han ] = ii_plotalltrials2d( ii_data,ii_cfg,which_chans, varargin )
+function [ f_han ] = ii_plotalltrials2d( ii_data,ii_cfg,which_chans, fig_visible, varargin )
 %ii_plotalltrials2d Plot of all trials, color-coded, in screen coords,
 %overlaid
 %   ii_plotalltrials2d(ii_data,ii_cfg) will overlay a plot of all trials,
@@ -34,16 +34,27 @@ if nargin < 3
     which_chans = {'X','Y'};
 end
 
+if nargin < 4 || isempty(fig_visible)
+    fig_visible = 1;
+end
+
 if length(which_chans)~=2
     error('iEye:ii_plotalltrials2d:channelInputError','must provide 2 channels');
 end
+
+
 
 str_args = {varargin{cellfun(@ischar,varargin)}};
 str_args_ind = find(cellfun(@ischar,varargin));
 
 
 % open the figure, add a descriptive title
-f_han = figure; hold on;
+if fig_visible == 1
+    f_han = figure;
+else
+    f_han = figure('visible','off');
+end
+hold on;
 if ~isempty(strfind(ii_cfg.edf_file,'/'))
     fn_fortitle = ii_cfg.edf_file(strfind(ii_cfg.edf_file,'/')+1:end);
 else
