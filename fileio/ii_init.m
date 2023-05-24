@@ -16,7 +16,7 @@ end
 hostname = strtrim(hostname);
 
 if ~ispref('iEye','edf2asc_path')
-    if strcmp(hostname, 'syndrome')
+    if strcmp(hostname, 'syndrome') || strcmp(hostname, 'vader')
         edf2asc_path = '/d/DATA/hyper/spacebin';
     else
         edf2asc_path = '/Users/mrugankdake/remote/hyper/spacebin';
