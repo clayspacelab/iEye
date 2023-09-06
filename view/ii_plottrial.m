@@ -60,9 +60,11 @@ end
 myt = (1:sum(thisidx)).' * 1/ii_cfg.hz;
 
 hold on;
-
+%mycols = {'blue', 'red', 'yellow', 'magenta'};
+%mycols = 255, 255, 255
+mycols = {[0, 114, 189], [217, 83, 25], [243, 200, 97], [131, 54, 146]};
 for ii = 1:length(which_chans)
-    plot(myt,ii_data.(which_chans{ii})(thisidx),'-','LineWidth',1.5);
+    plot(myt,ii_data.(which_chans{ii})(thisidx),'-','LineWidth',1.5, 'Color', mycols{ii}/255);
     if ismember(sprintf('%s_fix',which_chans{ii}),fieldnames(ii_data))
         plot(myt,ii_data.(sprintf('%s_fix',which_chans{ii}))(thisidx),'k-','LineWidth',1);
     end
