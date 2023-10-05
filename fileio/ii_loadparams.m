@@ -45,13 +45,13 @@ if nargin < 1
     % saccade detection
     ii_params.sacc_velocity_thresh = 30;    % deg/s
     ii_params.sacc_duration_thresh = 0.0075; % s
-    ii_params.sacc_amplitude_thresh = 1.5; % deg
+    ii_params.sacc_amplitude_thresh = 0.25; % deg
     
     
     % microsaccade detection
     ii_params.microsacc_velocity_thresh = 30;    % deg/s
     ii_params.microsacc_duration_thresh = 0.0075; % s
-    ii_params.microsacc_amplitude_limit = 0.25; % deg; want to collect all ms less than this 
+    ii_params.microsacc_amplitude_limit = 1.5; % deg; want to collect all ms less than this 
     
     % fixation detection (mode for computing fixations)
     ii_params.fixation_mode = 'mean';
