@@ -288,8 +288,6 @@ end
 % save these in ii_trial as ii_trial.targ
 ii_trial.targ = targ_coords_extracted;
 
-
-
 % get idx saccades to look at (those that start [end] in resp_epoch), and
 % corresponding trial index
 if strcmpi(score_mode,'strict')
