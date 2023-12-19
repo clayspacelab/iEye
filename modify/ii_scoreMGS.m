@@ -255,7 +255,6 @@ ii_trial.params.score_chans = which_chans; % the two channels that were used for
 
 
 %% extract targ_coords for each trial
-
 targ_coords_extracted = nan(ii_cfg.numtrials,2);
 
 % if targ_coords is n_trials x 2, then just extract from there
@@ -269,9 +268,12 @@ if size(targ_coords,1)==ii_cfg.numtrials && size(targ_coords,2) == 2
 % this channel most commonly (to account for mis-sampling, etc)
 elseif iscell(targ_coords)
     for tt = 1:ii_cfg.numtrials
+        %thisidx = ii_cfg.trialvec==tt & ismember(ii_data.XDAT,resp_epoch(end));
+        
         thisidx = ii_cfg.trialvec==tt & ismember(ii_data.XDAT,resp_epoch(end)+1);
         for cc = 1:length(targ_coords)
             targ_coords_extracted(tt,cc) = mode(ii_data.(targ_coords{cc})(thisidx));
+            %targ_coords_extracted(tt,cc) = max(ii_data.(targ_coords{cc})(thisidx));
         end
     end
     

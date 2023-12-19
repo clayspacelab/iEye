@@ -153,7 +153,7 @@ for i = 4:nchan
             mline = mline + 1;
         end
     end
-    
+ 
     % GET INDICES & SET VALUES
     li = 1;
     % ci = 1;
@@ -176,6 +176,12 @@ for i = 4:nchan
 end
 
 % CREATE FILE MATRIX
+% figure();
+% hold on;
+% for ii = 11:20
+%     thidx = find(sample_data(:, 5) == ii);
+%     plot(sample_data(thidx, 2), sample_data(thidx, 3), 'o');
+% end
 
 sample_data(:,1) = [];
 % Adding this for subj NY098, might hold true in general for all old
@@ -191,10 +197,10 @@ for bb = 1:length(list_codes)
     this_xpix_direct = this_xdva(1) * ii_params.ppd;
     this_ypix_direct = this_ydva(1) * ii_params.ppd;
     this_xpix = round(ii_params.resolution(1)/2 + this_xpix_direct);
-    this_ypix = round(ii_params.resolution(2)/2 - this_ypix_direct);
+    this_ypix = round(ii_params.resolution(2)/2 + this_ypix_direct);
     % Check for indices in sample_data that have this XDAT
     interesting_idx = find(sample_data(:, 4) == this_code);
-    sample_data(interesting_idx, 4) = 4;
+    % sample_data(interesting_idx, 4) = 4;
     sample_data(interesting_idx, 5) = this_xpix;
     sample_data(interesting_idx, 6) = this_ypix;
 end
