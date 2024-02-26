@@ -180,8 +180,9 @@ end
 % hold on;
 % for ii = 11:20
 %     thidx = find(sample_data(:, 5) == ii);
-%     plot(sample_data(thidx, 2), sample_data(thidx, 3), 'o');
+%     scatter(sample_data(thidx, 2), sample_data(thidx, 3), 'o', 'MarkerEdgeAlpha',0.5);
 % end
+% xlim([0 1200]); ylim([0, 1000]);
 
 sample_data(:,1) = [];
 % Adding this for subj NY098, might hold true in general for all old
@@ -199,8 +200,8 @@ for bb = 1:length(list_codes)
     this_xpix = round(ii_params.resolution(1)/2 + this_xpix_direct);
     this_ypix = round(ii_params.resolution(2)/2 + this_ypix_direct);
     % Check for indices in sample_data that have this XDAT
-    interesting_idx = find(sample_data(:, 4) == this_code);
-    % sample_data(interesting_idx, 4) = 4;
+    interesting_idx = find(sample_data(:, 4)-10 == this_code);
+    sample_data(interesting_idx, 4) = 4;
     sample_data(interesting_idx, 5) = this_xpix;
     sample_data(interesting_idx, 6) = this_ypix;
 end

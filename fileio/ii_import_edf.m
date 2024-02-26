@@ -100,6 +100,9 @@ fid = fopen(asc_samp_file,'r');
 sample_data = textscan(fid,'%f %f %f %f %*s %*s %*s %*s %*s');
 delete (asc_samp_file);
 sample_data = cell2mat(sample_data);
+
+% Added from Nathan *(fixes temporal order of events)
+sample_data = sortrows(sample_data, 1);
 %s_num = sample_data(:,1);
 %x = sample_data(:,2);
 %y = sample_data(:,3);
@@ -138,6 +141,11 @@ Mess = Mess';
 [varbl, vval] = strtok(remain);
 samp_n = str2double(samp_n);
 vval = str2double(vval);
+
+% Added from Nathan *(fixes temporal order of events)
+[samp_n, sort_I] = sort(samp_n);
+varbl = varbl(sort_I);
+vval = vval(sort_I);
 
 % SEARCH MSG EVENTS FOR VARIABLES XDAT, TarX and TarY
 for i = 4:nchan
