@@ -352,8 +352,10 @@ for tt = 1:ii_cfg.numtrials
     clear this_i_amp this_i_dur;
     
     % same for final sacc
-    this_f_sacc = which_sacc(find(which_trials==tt,1,'last'));
-    if ~isempty(this_f_sacc)
+    % Modified by Mrugank for ECoG subjects, where 
+    this_f_sacc = which_sacc(find(which_trials==tt,2,'first'));
+    if length(this_f_sacc) >= 2
+        this_f_sacc = this_f_sacc(2);
         ii_trial.f_sacc_raw(tt,:) = [ii_sacc.X_end(this_f_sacc) ii_sacc.Y_end(this_f_sacc)];
         ii_trial.f_sacc_rt(tt) = ii_sacc.t(this_f_sacc,1)-t_start;
         ii_trial.f_sacc_trace{tt} = [ii_sacc.X_trace{this_f_sacc} ii_sacc.Y_trace{this_f_sacc}];

@@ -1,4 +1,4 @@
-function [ii_data,ii_cfg,ii_params] = ii_import_edf_ecog(edf_file, ifg_file, data_file, ii_params, stimulus, varargin)
+function [ii_data,ii_cfg,ii_params] = ii_import_edf_meg(edf_file, ifg_file, data_file, ii_params, stimulus, varargin)
 %IMPORT EYELINK EDF FILES
 %   This function will import Eyelink EDF files but requires 'edf2asc'
 %   command (from Eyelink) be installed in MATLAB's path. A config (*.ifg)
@@ -41,7 +41,7 @@ function [ii_data,ii_cfg,ii_params] = ii_import_edf_ecog(edf_file, ifg_file, dat
 % of channel variables. Can use ii_unpackdata to put all channels into base
 % workspace (not advised!)
 
-if nargin < 2 || isempty(edf_file)
+if nargin < 1 || isempty(edf_file)
     [filename, pathname] = uigetfile('*.edf', 'Select EDF file');
     edf_file = fullfile(pathname, filename);
     if filename==0
@@ -50,7 +50,7 @@ if nargin < 2 || isempty(edf_file)
     end 
 end
 
-if nargin < 3 || isempty(ifg_file)
+if nargin < 2 || isempty(ifg_file)
     [filename_ifg, pathname] = uigetfile('*.ifg', 'Select IFG file');
     ifg_file = fullfile(pathname, filename_ifg);
     
@@ -60,7 +60,7 @@ if nargin < 3 || isempty(ifg_file)
     end
 end
 
-if nargin < 4
+if nargin < 3
    data_file = sprintf('%s_iEye.mat',edf_file(1:(end-4)));
 end
 
@@ -183,28 +183,6 @@ for i = 4:nchan
     end
 end
 
-% Manually adding the ii_params and 
-
-% Estimate the radius
-% figure();
-% for ii = 11:20
-%     thidx = find(sample_data(:, 5) == ii);
-%     scatter(sample_data(thidx, 2), sample_data(thidx, 3), 'o', 'MarkerEdgeAlpha',0.5);
-% end
-% 
-% ii_params.resolution = [round(median(sample_data(:,2)),-1)*2 round(median(sample_data(:,3)),-1)*2];
-% 
-% % Estimate the radius
-% est_radii = [];
-% for ii = 11:20
-%     thidx = find(sample_data(:, 5) == ii);
-%     this_radii = median(sqrt((sample_data(thidx, 2) - ii_params.resolution(1)/2).^2 + ...
-%                     (sample_data(thidx, 3) - ii_params.resolution(2)/2).^2), 'all', 'omitnan');
-%     est_radii = [est_radii; this_radii];
-%     %scatter(sample_data(thidx, 2), sample_data(thidx, 3), 'o', 'MarkerEdgeAlpha',0.5);
-% end
-% est_radius = round(median(est_radii));
-% ii_params.ppd = est_radius/9;
 % CREATE FILE MATRIX
 % figure();
 % hold on;
@@ -213,22 +191,8 @@ end
 %     scatter(sample_data(thidx, 2), sample_data(thidx, 3), 'o', 'MarkerEdgeAlpha',0.5);
 % end
 % xlim([0 1200]); ylim([0, 1000]);
-% xlim([0 round(median(sample_data(:,2)),-1)*2]); ylim([0 round(median(sample_data(:,3)),-1)*2]);
 
 sample_data(:,1) = [];
-% Adding this for subj NY098, might hold true in general for all old
-% recordings
-% if strcmp(p.subjID, 'NY098')
-%     ii_params.ppd = 72.46/2;
-% elseif strcmp(p.subjID, 'NY272')
-%     ii_params.ppd = 68.493/2;
-% elseif strcmp(p.subjID, 'NY276')
-%     ii_params.ppd = 114.9425/2;
-% elseif strcmp(p.subjID, 'NY190')
-%     ii_params.ppd = 68.9655/2;
-% end
-% Mrugank (04/27/2023)
-% Estimate screen resolution from recording
 sample_data(:, 5) = ones(length(sample_data), 1) * ii_params.resolution(1)/2;
 sample_data(:, 6) = ones(length(sample_data), 1) * ii_params.resolution(2)/2;
 list_codes = unique(stimulus.tarlocCode);
