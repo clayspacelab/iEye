@@ -111,24 +111,31 @@ blink_offsets = find(diff(blink_mask)==-1);
 % if the first offset (upwards threshold crossing) precedes the first
 % actual blink, or if the eye is closed at end of run (no offset)
 
-if blink_onsets(1) > blink_offsets(1)
-    
-    blink_onsets = [1; blink_onsets];
-    
-end
-
-if length(blink_offsets) == (length(blink_onsets)-1)
-    blink_offsets = [blink_offsets; length(pupil)];
-end
-
-blink_window = [blink_onsets-pri blink_offsets+fol];
-blink_window(blink_window(:,1)<1,1) = 1;
-blink_window(blink_window(:,2)>length(pupil),2) = length(pupil);
-
 blinkvec = zeros(size(pupil));
+if ~isempty(blink_onsets) && ~isempty(blink_offsets)
+ 
 
-for tt = 1:size(blink_window,1)
-    blinkvec(blink_window(tt,1):blink_window(tt,2)) = 1;
+    if blink_onsets(1) > blink_offsets(1)
+        
+        blink_onsets = [1; blink_onsets];
+        
+    end
+    
+    if length(blink_offsets) == (length(blink_onsets)-1)
+        blink_offsets = [blink_offsets; length(pupil)];
+    end
+    
+    blink_window = [blink_onsets-pri blink_offsets+fol];
+    blink_window(blink_window(:,1)<1,1) = 1;
+    blink_window(blink_window(:,2)>length(pupil),2) = length(pupil);
+    
+   
+    
+    for tt = 1:size(blink_window,1)
+        blinkvec(blink_window(tt,1):blink_window(tt,2)) = 1;
+    end
+else
+    blink_window = [];
 end
 
 % then, replace those with nan, and save an appropriate variable in ii_cfg
