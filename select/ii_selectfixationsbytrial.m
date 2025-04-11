@@ -53,7 +53,7 @@ end
 
 
 % check sel_mode is one of 'last','first','all'
-if ~ismember(sel_mode,{'last','first','begin','all','mode','nearest'})
+if ~ismember(sel_mode,{'last','first','begin','all','mode','nearest', 'nearest_longdwell'})
     error('iEye:ii_selectfixationsbytrial:invalidSelectionMode', 'Selection mode %s invalid: use one of first, last, begin, all, mode',sel_mode);
 end
 
@@ -103,6 +103,12 @@ for tt = 1:length(tu)
     if strcmpi(sel_mode,'last') % used for drift correction, calibration
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
+        % Added by Mrugank to account for last flag ending at recording end
+        if isempty(epoch_end)
+            epoch_end = length(trial_idx);
+        end
+        
+        
         last_fix_ind = find(ii_cfg.fixations(:,1)<(epoch_end-buffer_window),1,'last');
         
         last_fix_vec = zeros(size(new_sel));
@@ -115,6 +121,10 @@ for tt = 1:length(tu)
     elseif strcmpi(sel_mode,'first')
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
+        % Added by Mrugank to account for last flag ending at recording end
+        if isempty(epoch_end)
+            epoch_end = length(trial_idx);
+        end
         first_fix_ind = find(ii_cfg.fixations(:,1)>epoch_begin,1,'first');
         
         % select from beginning of this fixation to end of epoch or end of
@@ -196,6 +206,10 @@ for tt = 1:length(tu)
         end
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);
         epoch_end = find(diff(trial_idx & epoch_idx)==-1);
+        % Added by Mrugank to account for last flag ending at recording end
+        if isempty(epoch_end)
+            epoch_end = length(trial_idx);
+        end
         trial_epoch_idx = epoch_begin:epoch_end;
         
         % compute distance between fix_channels and this_calib_targ
@@ -207,6 +221,63 @@ for tt = 1:length(tu)
         new_sel(trial_epoch_idx(this_dist==min_dist))=1==1;
         
         clear this_calib_targ epoch_begin epocH_end this_fix this_dist min_dist;
+    elseif strcmpi(sel_mode,'nearest_longdwell')
+        % Added by Mrugank (April 12, 2025): To chose the fixation that has
+        % the longest dwell time and is also closest to the true feedback
+        % position
+        epoch_begin                 = find(diff(trial_idx & epoch_idx)== 1);
+        epoch_end                   = find(diff(trial_idx & epoch_idx)==-1);
+
+        if isempty(epoch_end)
+            epoch_end               = length(ii_data.X);
+        end
+        
+        % Find the current target location 
+        currTarX                    = ii_data.TarX(epoch_begin:epoch_end);
+        currTarY                    = ii_data.TarY(epoch_begin:epoch_end);
+        currTar                     = [median(currTarX, 'all', 'omitnan') ...
+                                       median(currTarY, 'all', 'omitnan')];
+
+        % Find all fixations within this epoch
+        fixWithinEpoch              = find((ii_cfg.fixations(:,1)<=(epoch_end+buffer_window)) & ...
+                                           (ii_cfg.fixations(:,2)>=(epoch_begin+buffer_window)));
+
+        % Find the distance between the target and all fixations and the
+        % length of fixations in samples
+        fix2TargDistance            = NaN(length(fixWithinEpoch), 1);
+        fix2TargTime                = NaN(length(fixWithinEpoch), 1);
+        for iFix                    = 1:length(fixWithinEpoch)
+            fixOnset                = ii_cfg.fixations(fixWithinEpoch(iFix), 1);
+            fixOffset               = ii_cfg.fixations(fixWithinEpoch(iFix), 2);
+            thisFix                 = [mean(ii_data.(fix_channels{1})(fixOnset:fixOffset), 'all', 'omitnan') ...
+                                       mean(ii_data.(fix_channels{2})(fixOnset:fixOffset), 'all', 'omitnan')];
+            fix2TargDistance(iFix)  = sqrt(sum((thisFix-currTar).^2, 2));
+            fix2TargTime(iFix)      = fixOffset - fixOnset;
+            
+        end
+
+        % Only use fixations where subjects spent more than 150 ms
+        threshFixation              = 300 * ii_cfg.hz / 1000; % in samples
+        [~, longfixIdx]             = find(fix2TargTime >= threshFixation);
+        fix2TargDistance_ForLongFix = fix2TargDistance(longfixIdx);
+        [~, j]                      = find(fix2TargDistance_ForLongFix - ...
+                                      min(fix2TargDistance_ForLongFix, [], 'all') ...
+                                      <= 1e-3);
+        selectedFixIdx              = longfixIdx(j);
+
+        % Choose the minimum fixation and the target index
+        nearest_fix_vec             = zeros(size(new_sel));
+        chosenFixStartSample        = max(ii_cfg.fixations(fixWithinEpoch(selectedFixIdx), 1), epoch_begin);
+        chosenFixEndSample          = min(ii_cfg.fixations(fixWithinEpoch(selectedFixIdx), 2), epoch_end);
+        nearest_fix_vec(chosenFixStartSample:chosenFixEndSample) ...
+                                    = 1;
+
+        % Save these as the new selections
+        new_sel                     = new_sel | (nearest_fix_vec == 1);
+
+        clearvars fixWithinEpoch fix2TargDistance j iFix nearest_fix_vec chosenFixEndSample chosenFixStartSample;
+
+
     end
 end
 

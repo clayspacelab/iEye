@@ -1,4 +1,4 @@
-function [ii_data,ii_cfg] = ii_definetrial(ii_data,ii_cfg, c1, v1, c2, v2)
+function [ii_data,ii_cfg] = ii_definetrial_MEG(ii_data,ii_cfg, c1, v1, c2, v2)
 %II_DEFINETRIAL Splits data into individual trials based on signal in the
 %               ii_data.(chan) variable
 %   [ii_data,ii_cfg] = ii_definetrial(ii_data,ii_cfg,c1,v1,c2,v2) splits
@@ -26,6 +26,9 @@ function [ii_data,ii_cfg] = ii_definetrial(ii_data,ii_cfg, c1, v1, c2, v2)
 % TODO: input cleaning, potentially add a sequential mode? (so that a
 % channel is already the trial number?)
 
+% Updated on Jan 25, 2026 by Mrugank, not sure how this was working
+% earlier.
+
 
 if nargin == 2
     prompt = {'Start when Channel', 'is at Value', 'Until Channel', 'is at Value'};
@@ -47,12 +50,12 @@ if ismember(c1,fieldnames(ii_data)) && ismember(c2,fieldnames(ii_data))
     trialvec = chan1*0;
     
     % indices where c1 becomes v1
-    swhere = find(diff([0; chan1] == v1)== 1);
-    % swhere = find(diff(chan1 == v1)== 1)+1;
+    %swhere = find(diff([0; chan1] == v1)== 1);
+    swhere = find(diff(chan1 == v1)== 1)+1;
     
     % indices where c2 is no longer v2
-    ewhere = find(diff([chan2;0] == v2)==-1);
-    % ewhere = find(diff(chan2 == v2)==-1);
+    %ewhere = find(diff([chan2;0] == v2)==-1);
+    ewhere = find(diff(chan2 == v2)==-1);
     
     % in case where swhere(1) > ewhere(1), shift them relative to one
     % another (this can be true when c1 matches v1

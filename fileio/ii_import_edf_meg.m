@@ -233,6 +233,36 @@ x = sample_data(:,1);
 % CREATE II_CFG STRUCT
 dt = datestr(now, 30);%'mmmm dd, yyyy HH:MM:SS.FFF AM');
 
+
+%%%%%%%%%%%%%% ADDING XDAT==5 (added on Jan 24th, 2025) %%%%%%%%%%%%%%%%%%%
+XDAT = eyedata.XDAT;
+swhere = find(diff([0; XDAT] == 4) == 1); % Find onset of 4
+ewhere = find(diff([XDAT; 0] == 4) ==-1); % Find onset of 5
+for tt = 1:length(swhere)
+    sOn = swhere(tt) + 1000; % Assuming Fs =  1000
+    sOff = ewhere(tt);
+    XDAT(sOn:sOff) = 5; 
+end
+
+
+% trig4onsetVec = find((diff(XDAT)==1) & (XDAT(1:end-1)==4)) - 1; % previous sample is the trig onset
+% for t = 1:length(trig4onsetVec)
+%     trig4onset = trig4onsetVec(t);
+%     % Assuming Fs = 1000Hz, make sure this is correct, 3500 is 3.5s,
+%     % since we know resp+feed is always 2.5s
+%     sampEndOverstim = min(trig4onset + 3500, length(XDAT)); % Making sure we don't run out of recording
+%     trig4offset = trig4onset + find(XDAT(trig4onset:sampEndOverstim) == 4, 1, "last") - 1;
+% 
+%     trig5onset = trig4onset + 1000; % since response epoch is 1s
+%     trig5offset = trig4offset; % this is where the trigger should end
+%     XDAT(trig5onset:trig5offset) =  5;
+% end
+
+% Update eyedata.XDAT 
+eyedata.XDAT = XDAT;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 ii_cfg.cursel = [];
 ii_cfg.sel = x*0;
 ii_cfg.cfg = cfg;
