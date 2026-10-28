@@ -133,7 +133,7 @@ end
 
 % TODO: most of this can be vectorized
 % start by defining all 'easy' fields
-for ss = 1:size(ii_cfg.saccades)
+for ss = 1:size(ii_cfg.saccades,1)
     
     % indices into ii_data channel vectors
     ii_sacc.idx(ss,:) = ii_cfg.saccades(ss,:);

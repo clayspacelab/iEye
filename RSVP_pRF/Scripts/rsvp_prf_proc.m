@@ -12,9 +12,9 @@ samples_per_bar = samples_per_tr * rsvp_params.tr_per_bar;
 
 
 % Find indices for each epoch start and end
-tr_sel = ii_cfg.sel * 0;
+%tr_sel = ii_cfg.sel * 0;
 iti_swhere = find(diff(ii_data.XDAT) == -1);
-task_ewhere = [iti_swhere' length(tr_sel)]';
+task_ewhere = [iti_swhere' length(ii_cfg.sel)]';
 iti_swhere = [1 iti_swhere']';
 task_swhere = find(diff(ii_data.XDAT) == 1);
 iti_ewhere = task_swhere - 1;
@@ -29,7 +29,7 @@ for i = 1:tr_per_sweep
 end
 
 
-% Assign tr number to selection vector
+% Find TR start/end indices for each bar sweep and store in tr_bricks
 tr_names = {};
 for i = 1:rsvp_params.tr_per_bar
     tr_name = strcat('tr_',num2str(i));
@@ -38,7 +38,7 @@ for i = 1:rsvp_params.tr_per_bar
     these_trs = find(tr_idc == i);
     for j = 1:length(these_trs)
         this_tr = these_trs(j);
-        tr_sel(task_idc(:,this_tr):task_idc(:,this_tr + 1)) = i;
+        %tr_sel(task_idc(:,this_tr):task_idc(:,this_tr + 1)) = i;
         % Track indices of tr spans for plotting
         tr_bricks.(tr_names{end}) = [tr_bricks.(tr_names{end}); task_idc(:,this_tr) task_idc(:,this_tr + 1)];
     end
@@ -121,7 +121,7 @@ ii_sacc.sacc_tr = sacc_tr;
 ii_sacc.sacc_bar_loc = sacc_bar_loc;
 ii_cfg.tr_excl = tr_excl;
 ii_cfg.bad_tr_idc = bad_tr_idc;
-ii_cfg.tr_sel = tr_sel;
+%ii_cfg.tr_sel = tr_sel;
 ii_cfg.tr_bricks = tr_bricks;
 ii_cfg.rsvp_prf_params = rsvp_params;
 

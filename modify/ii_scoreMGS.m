@@ -371,7 +371,7 @@ for tt = 1:ii_cfg.numtrials
     if ~isempty(this_i_sacc) && ~isempty(this_f_sacc)
         % in most cases, we'll identify both i_sacc & f_sacc -
         % use this algo
-        ii_trial.n_sacc(tt) = length(this_i_sacc:this_f_sacc);
+        ii_trial.n_sacc(tt) = length(this_i_sacc(1):this_f_sacc);
     else
         % if either of them is undefined (or both), this will
         % give us the # of saccades: 1 if only i_sacc or only

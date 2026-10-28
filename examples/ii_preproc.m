@@ -191,7 +191,7 @@ f_all = ii_plotalltrials(ii_data,ii_cfg,{'X','Y'},[],[],ii_params.epoch_chan,ii_
 
 % save the figures for our records
 if length(f_all)>1
-    for ff = 1:lenght(f_all)
+    for ff = 1:length(f_all)
         saveas(f_all,sprintf('%s_%02.f.png',preproc_fn(1:end-4),ff),'png');
     end
 else

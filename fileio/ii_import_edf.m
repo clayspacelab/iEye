@@ -93,7 +93,10 @@ echan = nchan - 3;
 %end
 disp(status);
 disp(result);
-asc_samp_file = strrep(edf_file, '.edf', '.asc');
+%asc_samp_file = strrep(edf_file, '.edf', '.asc');
+%this is safer and is case-insensitive
+[edf_dir, edf_name] = fileparts(edf_file);
+asc_samp_file = fullfile(edf_dir, [edf_name '.asc']); 
 
 fid = fopen(asc_samp_file,'r');
 %M = textscan(fid,'%f %f %f %f %*s');
@@ -113,7 +116,7 @@ sample_data = sortrows(sample_data, 1);
 [status,result] = system(['edf2asc -t -c -v -y -e -miss 0 ' edf_file]);
 disp(status);
 disp(result);
-asc_evnt_file = strrep(edf_file, '.edf', '.asc');
+asc_evnt_file = fullfile(edf_dir, [edf_name '.asc']); %strrep(edf_file, '.edf', '.asc');
 
 fid = fopen(asc_evnt_file,'r');
 event_data = textscan(fid,'%s', 'delimiter','\n');

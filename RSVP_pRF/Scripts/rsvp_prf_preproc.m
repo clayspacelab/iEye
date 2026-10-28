@@ -66,7 +66,7 @@ end
 
 
 % import data
-[ii_data,ii_cfg] = rsvp_prf_import_edf(edf_fn,cfg_fn,[edf_fn(1:end-4) '_iEye.mat']);
+[ii_data,ii_cfg] = ii_import_edf(edf_fn,cfg_fn,[edf_fn(1:end-4) '_iEye.mat']); %rsvp_prf_import_edf(edf_fn,cfg_fn,[edf_fn(1:end-4) '_iEye.mat']);
 
 %imported_plot = plot_data(ii_data,{'X','Y'})
 
@@ -149,8 +149,10 @@ if ~ismember('drift',skip_steps)
 % use those selections to drift-correct each trial (either using the
 % fixation value, which may include timepoints past end of epoch, or using
 % 'raw' or 'smoothed' data on each channel)
-    [ii_data,ii_cfg] = rsvp_prf_driftcorrect(ii_data,ii_cfg,{'X','Y'},ii_params.drift_select_mode,...
-        ii_params.drift_target, rsvp_params);
+    % [ii_data,ii_cfg] = rsvp_prf_driftcorrect(ii_data,ii_cfg,{'X','Y'},ii_params.drift_select_mode,...
+    %     ii_params.drift_target, rsvp_params);
+     [ii_data,ii_cfg] = ii_driftcorrect(ii_data,ii_cfg,{'X','Y'},ii_params.drift_select_mode,...
+         ii_params.drift_target);
 end
 
 
@@ -166,32 +168,6 @@ end
 if nargin>=5 && ~isempty(trialinfo)
     [ii_data,ii_cfg] = ii_addtrialinfo(ii_data,ii_cfg,trialinfo);
 end
-
-
-% 'target correct' or 'calibrate' (which name is better?)
-% adjust timeseries on a trial so that gaze at specified epoch (quantified
-% w/ specified method, like driftcorrect) is at known coords (either given
-% by a channel or a pair of cols in ii_cfg.trialinfo
-
-% first, select relevant epochs (should be one selection per trial)
-
-if ~ismember('calibration',skip_steps)
-    % FOR SPECIFIED TARGETS/NEAREST FIXATION SELECTION
-    [ii_data,ii_cfg] = ii_selectfixationsbytrial(ii_data,ii_cfg,ii_params.epoch_chan,...
-        ii_params.calibrate_epoch,ii_params.calibrate_select_mode,ii_params.calibrate_window,...
-        ii_params.calibrate_target,{'X_fix','Y_fix'}); %
-    
-    if ismember(ii_params.calibrate_mode,{'scale','rotate'})
-        % then, calibrate by trial
-        [ii_data,ii_cfg] = rsvp_prf_calibratebytrial(ii_data,ii_cfg,{'X','Y'},...
-            ii_params.calibrate_target,ii_params.calibrate_mode, ii_params.calibrate_limits);
-    elseif ismember(ii_params.calibrate_mode,'run')
-        % calibrate by run
-        [ii_data,ii_cfg] = ii_calibratebyrun(ii_data,ii_cfg,{'X','Y'},...
-            ii_params.calibrate_target,ii_params.calibrate_deg,ii_params.calibrate_limits);
-    end
-end
-
 
 % save the preprocessing params
 ii_cfg.params = ii_params;
@@ -221,7 +197,7 @@ f_all = ii_plotalltrials(ii_data,ii_cfg,{'X','Y'},[],[],ii_params.epoch_chan,ii_
 
 % save the figures for our records
 if length(f_all)>1
-    for ff = 1:lenght(f_all)
+    for ff = 1:length(f_all)
         saveas(f_all,sprintf('%s_%02.f.png',preproc_fn(1:end-4),ff),'png');
     end
 else

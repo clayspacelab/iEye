@@ -55,11 +55,10 @@ else
     f_han = figure('visible','off');
 end
 hold on;
-if ~isempty(strfind(ii_cfg.edf_file,'/'))
-    fn_fortitle = ii_cfg.edf_file(strfind(ii_cfg.edf_file,'/')+1:end);
-else
-    fn_fortitle = ii_cfg.edf_file;
-end
+
+[~, fn_name, fn_ext] = fileparts(ii_cfg.edf_file);
+fn_fortitle = [fn_name fn_ext];
+
 set(gcf,'NumberTitle','off','Name',fn_fortitle);
 
 if ~ismember('trialvec',fieldnames(ii_cfg))

@@ -53,16 +53,16 @@ ii_sess = struct();
 
 % and initialize an empty set of run & trial indices
 % (assume all runs are same size; not strictly true but that's ok below)
-r_num = nan(size(ii_trial{1}.i_sacc,1)*length(ii_trial),1);
-t_num = nan(size(ii_trial{1}.i_sacc,1)*length(ii_trial),1);
+r_num = nan(size(ii_trial{1}.X,1)*length(ii_trial),1);
+t_num = nan(size(ii_trial{1}.X,1)*length(ii_trial),1);
 
 for rr = 1:length(ii_trial)
     ii_sess = cat_struct(ii_sess,ii_trial{rr},{'params'}); % don't need to concatenate params
     
-    thisidx = size(ii_sess.i_sacc,1) - size(ii_trial{rr}.i_sacc,1) + (1:size(ii_trial{rr}.i_sacc,1));
+    thisidx = size(ii_sess.X,1) - size(ii_trial{rr}.X,1) + (1:size(ii_trial{rr}.X,1));
     
     r_num(thisidx) = run_labels(rr);
-    t_num(thisidx) = 1:size(ii_trial{rr}.i_sacc,1);
+    t_num(thisidx) = 1:size(ii_trial{rr}.X,1);
     clear thisidx;
 end
 

@@ -53,7 +53,7 @@ end
 
 
 % check sel_mode is one of 'last','first','all'
-if ~ismember(sel_mode,{'last','first','begin','all','mode','nearest', 'nearest_longdwell'})
+if ~ismember(sel_mode,{'last','first','begin','all','mode','nearest', 'nearest_longdwell','last_nofix','last_nofix_nobegin'})
     error('iEye:ii_selectfixationsbytrial:invalidSelectionMode', 'Selection mode %s invalid: use one of first, last, begin, all, mode',sel_mode);
 end
 
@@ -83,7 +83,7 @@ epoch_idx = ismember(ii_data.(epoch_chan),within_epochs);
 % update_cursel
 if any(strcmpi(sel_mode,{'all','mode'}))
     all_fixvec = 0*ii_cfg.sel;
-    for ff = 1:size(ii_cfg.fixations)
+    for ff = 1:size(ii_cfg.fixations,1)
         all_fixvec(ii_cfg.fixations(ff,1):ii_cfg.fixations(ff,2))=1;
     end
 end
@@ -117,6 +117,80 @@ for tt = 1:length(tu)
         new_sel = new_sel|(last_fix_vec==1);
         
         clear last_fix_vec epoch_begin epoch_end last_fix_ind trial_idx;
+
+    % if method is last_fixation, find within this trial, within
+    % [correct_to_epochs], start of last fixation, select from there to end
+    % of last correct_to_epoch, but drop last fixations that appear to be
+    % saccades back to central fixation. Also drop fixation continuous w/
+    % last fix of response period.
+    elseif strcmpi(sel_mode,'last_nofix_nobegin') % used for calibration
+        % NOTE: this will use FixX, FixY channels!!!!
+        epoch_begin = find(diff(trial_idx & epoch_idx)==1);
+        epoch_end = find(diff(trial_idx & epoch_idx)==-1);
+        % Added by Mrugank to account for last flag ending at recording end
+        if isempty(epoch_end)
+            epoch_end = length(trial_idx);
+        end
+        trial_epoch_idx = epoch_begin:epoch_end;
+        
+        % compute distance between fix_channels and central fixation (0,0)
+        this_fix = [ii_data.(fix_channels{1})(trial_idx==1 & epoch_idx==1) ii_data.(fix_channels{2})(trial_idx==1 & epoch_idx==1)];
+        this_dist = sqrt(sum(this_fix.^2,2));
+        
+        %get unique values, subject to constraints
+        this_dist_u = unique(this_dist(~isnan(this_dist)),'stable');
+        this_dist_u_clean = this_dist_u(this_dist_u > 1.5); %ignore saccades back to fixation.
+
+        first_fix_ind = find(ii_cfg.fixations(:,1)>epoch_begin,1,'first');
+        if ii_cfg.fixations(first_fix_ind,1) > epoch_end && length(this_dist_u) > 1
+            error('fixation mismatch %d',tt);
+        end
+        
+        % select that point for that trial
+        if isempty(this_dist_u_clean) || ii_cfg.fixations(first_fix_ind,1) > epoch_end
+            %can't calibrate if left w/ no fixations past final saccade
+            sel_dist = NaN; %this_dist_u(end);
+        else
+            %otherwise select last not close to central fix
+            sel_dist = this_dist_u_clean(end);
+        end
+        new_sel(trial_epoch_idx(this_dist==sel_dist))=1==1;
+        
+        clear this_calib_targ epoch_begin epocH_end this_fix this_dist sel_dist first_fix_ind;
+
+        % if method is last_fixation, find within this trial, within
+    % [correct_to_epochs], start of last fixation, select from there to end
+    % of last correct_to_epoch, but drop last fixations that appear to be
+    % saccades back to central fixation.
+    elseif strcmpi(sel_mode,'last_nofix') % used for calibration
+        % NOTE: this will use FixX, FixY channels!!!!
+        epoch_begin = find(diff(trial_idx & epoch_idx)==1);
+        epoch_end = find(diff(trial_idx & epoch_idx)==-1);
+        % Added by Mrugank to account for last flag ending at recording end
+        if isempty(epoch_end)
+            epoch_end = length(trial_idx);
+        end
+        trial_epoch_idx = epoch_begin:epoch_end;
+        
+        % compute distance between fix_channels and central fixation (0,0)
+        this_fix = [ii_data.(fix_channels{1})(trial_idx==1 & epoch_idx==1) ii_data.(fix_channels{2})(trial_idx==1 & epoch_idx==1)];
+        this_dist = sqrt(sum(this_fix.^2,2));
+        
+        %get unique values, subject to constraints
+        this_dist_u = unique(this_dist(~isnan(this_dist)),'stable');
+        this_dist_u_clean = this_dist_u(this_dist_u > 1.5); %ignore saccades back to fixation.
+
+        % select that point for that trial
+        if isempty(this_dist_u_clean)
+            %can't calibrate if left w/ no fixations past final saccade
+            sel_dist = NaN; %this_dist_u(end);
+        else
+            %otherwise select last not close to central fix
+            sel_dist = this_dist_u_clean(end);
+        end
+        new_sel(trial_epoch_idx(this_dist==sel_dist))=1==1;
+        
+        clear this_calib_targ epoch_begin epocH_end this_fix this_dist sel_dist;
 
     elseif strcmpi(sel_mode,'first')
         epoch_begin = find(diff(trial_idx & epoch_idx)==1);

@@ -76,12 +76,8 @@ for cc = 1:length(which_chans)
     end
 end
 
-
-if ~isempty(strfind(ii_cfg.edf_file,'/'))
-    fn_fortitle = ii_cfg.edf_file(strfind(ii_cfg.edf_file,'/')+1:end);
-else
-    fn_fortitle = ii_cfg.edf_file;
-end
+[~, fn_name, fn_ext] = fileparts(ii_cfg.edf_file);
+fn_fortitle = [fn_name fn_ext];
 
 nfigs = ceil(ii_cfg.numtrials/(nrows*ncols));
 

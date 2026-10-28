@@ -194,7 +194,7 @@ end
 % draw saccade markers (if possible, not forbidden)
 if ismember('saccades',fieldnames(ii_cfg)) && ~ismember('nosaccades',varargin)
     
-    for ss = 1:size(ii_cfg.saccades)
+    for ss = 1:size(ii_cfg.saccades,1)
         
         plot(mean(myt(ii_cfg.saccades(ss,:))),myy(2)-0.25,SACCADE_MARKER,'MarkerSize',SACCADE_MARKERSIZE,'Color',SACCADE_COLOR,'MarkerFaceColor',SACCADE_COLOR);
         
@@ -261,11 +261,8 @@ end
 set(gcf,'Position',FIG_POSITION)
 
 % add a title
-if ~isempty(strfind(ii_cfg.edf_file,'/'))
-    fn_fortitle = ii_cfg.edf_file(strfind(ii_cfg.edf_file,'/')+1:end);
-else
-    fn_fortitle = ii_cfg.edf_file;
-end
+[~, fn_name, fn_ext] = fileparts(ii_cfg.edf_file);
+fn_fortitle = [fn_name fn_ext];
 set(gcf,'NumberTitle','off','Name',fn_fortitle);
 
 
