@@ -1,4 +1,4 @@
-function [ii_data,ii_cfg,ii_sacc] = rsvp_prf_preproc(edf_fn,cfg_fn,preproc_fn,ii_params,trialinfo,skip_steps)
+function [ii_data,ii_cfg,ii_sacc] = rsvp_prf_preproc(edf_fn,cfg_fn,preproc_fn,ii_params,rsvp_params,trialinfo,skip_steps)
 % ii_preproc Performs default pre-processing stream
 %
 % For preprocessing saccade data (specifically, memory-guided saccade
@@ -60,7 +60,7 @@ if ischar(ii_params)
     ii_params = ii_loadparams(ii_params);
 end
 
-if nargin < 6 || isempty(skip_steps)
+if nargin < 7 || isempty(skip_steps)
     skip_steps = {}; % don't skip anything!
 end
 
@@ -72,6 +72,12 @@ end
 
 % truncate data to relevant XDATs
 [ii_data,ii_cfg] = ii_trim(ii_data,ii_cfg,ii_params.valid_epochs,ii_params.epoch_chan);
+
+if isfield(rsvp_params,'task') && strcmp(rsvp_params.task,'rdk')
+    %we need to change the XDATs to make this processable: RDK labels each
+    %sweep by number, relabel to 1 (first bar position) and 2 (rest of sweep)
+    [ii_data,ii_cfg] = rdk_relabel_xdat(ii_data,ii_cfg,rsvp_params,ii_params.epoch_chan);
+end
 
 %trim_plot = plot_data(ii_data,{'X','Y'})
 % rescale X, Y based on screen info
@@ -132,11 +138,6 @@ end
 [ii_data,ii_cfg] = ii_findfixations(ii_data,ii_cfg,{'X','Y'},ii_params.fixation_mode);
 
 
-% RSVP edit
-% Load in RSVP params
-rsvp_params = rsvp_prf_loadparams();
-
-
 %fix_plot = ii_plottimeseries(ii_data,ii_cfg,{'X','Y','X_fix','Y_fix','TarX','TarY'},'noselections')
 %legend({'X','Y','X fix','Y fix'})
 % select the fixation used for drift correction
@@ -165,32 +166,28 @@ end
 
 
 % if trialinfo is defined, otherwise skip
-if nargin>=5 && ~isempty(trialinfo)
+if nargin>=6 && ~isempty(trialinfo)
     [ii_data,ii_cfg] = ii_addtrialinfo(ii_data,ii_cfg,trialinfo);
 end
 
 % save the preprocessing params
 ii_cfg.params = ii_params;
 
-% save this script?
-
-% save ii_data,ii_cfg in _preproc.mat file
-ii_savedata(ii_data,ii_cfg,preproc_fn);
-
-
 % get the saccades
 [ii_data,ii_cfg,ii_sacc] = ii_extractsaccades(ii_data,ii_cfg,{'X','Y'},...
     ii_params.extract_sacc_mode_start,...
     ii_params.extract_sacc_mode_end,...
-    ii_params.epoch_chan);
+    ii_params.epoch_chan,true);
+
+% Add task info and flag trs w/ saccades (this function not thoroughly
+% vetted
+[ii_cfg, ii_sacc] = rsvp_prf_proc(ii_data, ii_cfg, ii_sacc, rsvp_params);
+
+% save ii_data,ii_cfg in _preproc.mat file
+ii_savedata(ii_data,ii_cfg,preproc_fn);
 
 % save the saccades
 ii_savesacc(ii_cfg,ii_sacc,[preproc_fn(1:end-4) '_sacc.mat']);
-
-
-% Edit for RSVP - JK
-[ii_cfg, ii_sacc] = rsvp_prf_proc(ii_data, ii_cfg, ii_sacc);
-
 
 % plot all these - make sure they're good
 f_all = ii_plotalltrials(ii_data,ii_cfg,{'X','Y'},[],[],ii_params.epoch_chan,ii_params.plot_epoch,0);
@@ -209,6 +206,7 @@ end
 % Use the rsvp_prf_plottimeseries function, which also includes info about
 % where the stimuli are presented on the screen, and some other helpful
 % features
+
 if ii_params.show_plots == 1
     f_ts = rsvp_prf_plottimeseries(ii_data,ii_cfg,{'X','Y','TarX','TarY'});
 else

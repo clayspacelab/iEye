@@ -1,47 +1,67 @@
-function [rsvp_params] = rsvp_prf_loadparams()
+function [rsvp_params] = rsvp_prf_loadparams(params_file)
+%RSVP_PRF_LOADPARAMS Read task parameters from an RSVP pRF rsvp_params.txt file.
+%
+%   rsvp_params = rsvp_prf_loadparams(params_file)
+%
+%   Each parameter in the file is a comment line naming it, followed by its
+%   value on the next line, then a separator line of dashes ending in '#':
+%       # tr = TR length. Format: float
+%       1.3
+%       ---------#
+%   The name is the text between '#' and the first '='. The number, order,
+%   and names of the parameters are taken from the file. A parameter whose
+%   value line is missing or blank gets []. Values are converted to
+%   numeric/logical/etc. by rsvp_parse_value.
+%
+%   ppd (pixels per degree) is computed from screen_res, screen_height, and
+%   view_dist and added to the output.
+%
+%   params_file defaults to rsvp_params.txt in the current folder.
+%
+%   See also rsvp_parse_value, rsvp_read_params.
 
+
+%look for rsvp_params.txt in cwd by default
+if ~exist('params_file','var')
+    params_file = 'rsvp_params.txt';
+end
 
 % Load parameters from RSVP pRF task
-params_fid = fopen('rsvp_params.txt', 'r');
+lines = strip(readlines(params_file));
+is_name = startsWith(lines, "#") & contains(lines, "=");
+is_sep  = matches(lines, asManyOfPattern("-", 1) + "#");
 
-% Older version of rsvp_params.txt below
-%{ 
-rsvp_params_list = {'disp_units'; 'targ_rate'; 'n_trials'; 'n_bars'; 'tr'; 'tr_per_bar'; 'testing'; 'screen_res'; 
-    'stim_bounds'; 'screen_height'; 'view_dist'; 'background_color'; 'targ_cooldown'; 'response_period'; 
-    'constrained_set'; 'calibrate_targ'; 'bore_mask'; 'save_log'; 'stair_upper'; 'stair_lower'; 'eyetracker_ip'; 
-    'pulse_cue'; 'extended_start'; 'fix_size'; 'calib_type';};
-%}
-rsvp_params_list = {'eyetracker_ip';'calib_type';'response_key';'pulse_cue';'background_color';'text_color';'fix_color';'tr';
-    'tr_per_bar';'n_bars';'n_trials';'targ_rate';'targ_cooldown';'response_period';'response_delay';'show_feedback';
-    'feedback_frames';'calibrate_targ';'extended_start';'bore_mask';'constrained_set';'stair_upper';'stair_lower';
-    'fix_size';'save_log';'screen_res';'stim_bounds';'screen_height';'view_dist';'disp_units';'testing';};
+% name is between '#' and the first '='; value is the line after the name,
+% unless that line is a separator or another parameter (i.e., value missing)
+name_idx = find(is_name);
+names    = strip(extractBefore(extractAfter(lines(name_idx), "#"), "="));
+val_idx  = name_idx + 1;
+has_val  = val_idx <= numel(lines);
+has_val(has_val) = ~is_sep(val_idx(has_val)) & ~is_name(val_idx(has_val));
+values   = repmat("", size(names));
+values(has_val) = lines(val_idx(has_val));
 
+% convert values to numeric/logical/etc. (see rsvp_parse_value)
+names  = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(names));
+values = arrayfun(@rsvp_parse_value, values, 'UniformOutput', false);
+rsvp_params = cell2struct(values, cellstr(names), 1);
 
-
-rsvp_params = {};
-i = 1;
-for j = 1:93
-    thisline = fgetl(params_fid);
-    if mod(j,3) == 2
-        rsvp_params{i,1} = thisline;
-        i = i+1;
-    end
-end
-rsvp_params = cell2struct(rsvp_params, rsvp_params_list);
-rsvp_params.n_trials = str2num(rsvp_params.n_trials);
-rsvp_params.n_bars = str2num(rsvp_params.n_bars);
-rsvp_params.tr = str2double(rsvp_params.tr);
-rsvp_params.tr_per_bar = str2num(rsvp_params.tr_per_bar);
-
+%fix size is specified as a percentage in rsvp_params and output as a
+%decimal proportion in summary csv, so harmonizing here
+rsvp_params.fix_size = rsvp_params.fix_size/100;
 
 % Get screen params, convert to DVA
-mon_height = str2double(rsvp_params.screen_height);
-mon_dist = str2double(rsvp_params.view_dist);
-mon_vert_res = split(rsvp_params.screen_res, ',');
-mon_vert_res = str2num(mon_vert_res{2});
-mon_vert_deg = (180 / pi) * 2 * atan(mon_height / (2 * mon_dist));
-ppd = mon_vert_res / mon_vert_deg;
-rsvp_params.ppd = ppd;
+if all(isfield(rsvp_params, {'screen_res','screen_height','view_dist'}))
+    rsvp_params.screen_width = rsvp_params.screen_height * rsvp_params.screen_res(1) / rsvp_params.screen_res(2);  
+    rsvp_params.screen_h_deg = (180 / pi) * 2 * atan(rsvp_params.screen_height / (2 * rsvp_params.view_dist));
+    rsvp_params.screen_w_deg = (180 / pi) * 2 * atan(rsvp_params.screen_width / (2 * rsvp_params.view_dist));
+    rsvp_params.ppd  = rsvp_params.screen_res(2) / rsvp_params.screen_h_deg;
+else
+    warning('Screen parameters missing from %s; ppd not computed.', params_file)
+end
+
+rsvp_params.task = 'rsvp';
+rsvp_params.filename = params_file;
 
 
 end

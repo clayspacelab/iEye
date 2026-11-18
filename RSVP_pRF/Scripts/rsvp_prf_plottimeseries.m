@@ -33,13 +33,13 @@ function [ f_han ] = rsvp_prf_plottimeseries( ii_data, ii_cfg, which_chans, vara
 % TODO: all plotting options!!!!
 
 % a few constants for plotting:
-TRIAL_BORDER_COLOR = [0.8 0.8 0.8];
+TRIAL_BORDER_COLOR = [0.4 0.4 0.4];
 SELECTION_COLOR = [0.6 0 0]; % DARK RED
 SELECTION_ALPHA = 0.25;
 
 SACCADE_MARKER = 'v';
 SACCADE_MARKERSIZE = 4;
-SACCADE_COLOR = [0.6 0 0];
+SACCADE_COLOR = [1.0 1.0 1.0] * 0.3;
 
 FIXATION_COLOR = [0 0 0];
 
@@ -63,70 +63,45 @@ if ~iscell(which_chans), which_chans = {which_chans}; end
 
 %which_chans = {'X','Y','TarX','TarY', 'PupilZ'};
 chan_colors = lines(length(which_chans));
-tmp = chan_colors(3,:);
-chan_colors(3,:) = chan_colors(4,:);
-chan_colors(4,:) = tmp;
+if size(chan_colors,1) >= 4 % swap colors of channels 3 and 4 (stim X, Y)
+    tmp = chan_colors(3,:);
+    chan_colors(3,:) = chan_colors(4,:);
+    chan_colors(4,:) = tmp;
+end
 myt = (1:length(ii_data.(which_chans{1}))).' * 1/ii_cfg.hz;
 
 
-% Get screen params, convert to DVA
-mon_height = str2double(ii_cfg.rsvp_prf_params.screen_height);
-mon_dist = str2double(ii_cfg.rsvp_prf_params.view_dist);
-mon_vert_res = split(ii_cfg.rsvp_prf_params.screen_res, ',');
-mon_vert_res = str2num(mon_vert_res{2});
-mon_vert_deg = (180 / pi) * 2 * atan(mon_height / (2 * mon_dist));
-ppd = mon_vert_res / mon_vert_deg;
-stim_bounds = split(ii_cfg.rsvp_prf_params.stim_bounds, ',');
-stim_bounds_x = str2num(stim_bounds{1});
-stim_bounds_y = str2num(stim_bounds{2});
-stim_max = max(stim_bounds_x, stim_bounds_y);
-stim_max_deg = stim_max / ppd;
-% Set screen edges for graph
-myy = [( -1 * stim_max_deg) / 2, stim_max_deg / 2];
-% Calculate positions of stimulus bars  during each sweep
-image_h = stim_bounds_x  / 6;
-% Find positions of margins
-l_marg = (-1 * stim_bounds_x / 2) + (image_h / 2);
-r_marg = (stim_bounds_x / 2) - (image_h / 2);
-t_marg = (stim_bounds_y / 2) - (image_h / 2);
-b_marg = (-1 *  stim_bounds_y / 2) + (image_h / 2);
-% Grab some params
-n_bars = ii_cfg.rsvp_prf_params.n_bars;
-n_trials = ii_cfg.rsvp_prf_params.n_trials;
-tr_per_bar = ii_cfg.rsvp_prf_params.tr_per_bar;
-lr_dist = (r_marg - l_marg) / (n_bars - 1);
-tb_dist = (b_marg - t_marg) / (n_bars - 1);
-horiz_bars = [l_marg];
-vert_bars = [t_marg];
-for i = 2:n_bars
-    horiz_bars(end+1) = horiz_bars(end) + lr_dist;
-    vert_bars(end+1) = vert_bars(end) + tb_dist;
+% Timing and position of every bar step (RSVP or RDK task); see
+% rsvp_prf_extract_task_timing. Saved by rsvp_prf_proc; recomputed for files
+% preprocessed before it was.
+if isfield(ii_cfg, 'task_timing')
+    task_timing = ii_cfg.task_timing;
+else
+    task_timing = rsvp_prf_extract_task_timing(ii_data, ii_cfg, ii_cfg.rsvp_prf_params);
 end
-% Transform to DVA
-l2r_pos = horiz_bars / ppd;
-t2b_pos = vert_bars / ppd;
-r2l_pos = flip(l2r_pos);
-b2t_pos = flip(t2b_pos);
-loc_mat = [l2r_pos' t2b_pos' r2l_pos' b2t_pos'];
 
+% Set screen edges for graph (stimulus area, deg)
+stim_max_deg = max(task_timing.stim_extent_deg);
+myy = [-stim_max_deg/2, stim_max_deg/2];
 
-TarX = myt * 0;
-TarY = myt * 0;
-
-for i = 1:n_trials
-    for j = 1:n_bars
-        tot_bar = (i - 1) * n_bars + j;
-        idx_1 = ii_cfg.tr_bricks.tr_1(tot_bar,1);
-        idx_2 = ii_cfg.tr_bricks.(strcat('tr_',num2str(tr_per_bar)))(tot_bar,2);
-        if mod(i,2) == 1
-            TarX(idx_1:idx_2) = loc_mat(j,moditer(i,4));
-        end
-        if mod(i,2) == 0
-            TarY(idx_1:idx_2) = loc_mat(j,moditer(i,4));
-        end
+% Stimulus trace: bar center on the axis the bar moves along during each bar
+% step; NaN (not drawn) when there's no sweep and on the axis that doesn't move
+TarX = nan(size(myt));
+TarY = nan(size(myt));
+for rr = 1:numel(task_timing.sweep)
+    idx = max(task_timing.start_idx(rr), 1):min(task_timing.end_idx(rr), length(myt));
+    if ismember(task_timing.dir{rr}, {'L2R','R2L'})
+        TarX(idx) = task_timing.tar_x(rr);
+    else
+        TarY(idx) = task_timing.tar_y(rr);
     end
 end
 
+% break the trace between sweeps (RDK sweeps run back to back, with no ITI)
+sweep_on = task_timing.start_idx(task_timing.step == 1);
+sweep_on = sweep_on(sweep_on >= 1 & sweep_on <= length(myt));
+TarX(sweep_on) = NaN;
+TarY(sweep_on) = NaN;
 
 ii_data.TarX = TarX;
 ii_data.TarY = TarY;
@@ -138,7 +113,7 @@ ii_data.TarY = TarY;
 
 % draw the channels
 
-if ismember(varargin,'nofigure')
+if ismember('nofigure',varargin)
     f_han = figure('visible','off');
 else
     f_han = figure;
@@ -219,15 +194,12 @@ end
 
 
 % Adaptation for rsvp prf data
-% Colors for each tr
-tr_colors = {[0.8 0.8 0.8], [0.7 0.7 0.7], [0.55 0.55 0.55], [0.4 0.4 0.4], };
-% Draw patches for each tr
+% Draw patches for each TR within each bar step, one gray level per TR
 tr_names = fieldnames(ii_cfg.tr_bricks);
-for i = 1:size(tr_names, 1)
+tr_names = tr_names(~cellfun(@isempty, regexp(tr_names, '^tr_\d+$')));
+tr_colors = num2cell(repmat(linspace(0.8, 0.4, max(numel(tr_names), 2)).', 1, 3), 2);
+for i = 1:numel(tr_names)
     tr_name = tr_names{i};
-    if ~strcmp(tr_name(1:2), 'tr')
-        continue;
-    end
     for j = 1:size(ii_cfg.tr_bricks.(tr_name), 1)
         p1 = ii_cfg.tr_bricks.(tr_name)(j,1);
         p2 = ii_cfg.tr_bricks.(tr_name)(j,2);

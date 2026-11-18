@@ -1,4 +1,4 @@
-function [ ii_data, ii_cfg, ii_sacc ] = ii_extractsaccades( ii_data,ii_cfg,which_chans,startpoint_mode,endpoint_mode, epoch_chan )
+function [ ii_data, ii_cfg, ii_sacc ] = ii_extractsaccades( ii_data,ii_cfg,which_chans,startpoint_mode,endpoint_mode, epoch_chan, allow_missing)
 %ii_extractsaccades After preprocessing, extract saccade properties
 %   [ii_data,ii_cfg,ii_sacc] = ii_extractsaccades(ii_data,ii_cfg) extracts
 %   properties of all saccades in ii_cfg.saccades using the
@@ -20,7 +20,12 @@ function [ ii_data, ii_cfg, ii_sacc ] = ii_extractsaccades( ii_data,ii_cfg,which
 %   numbers, inclusive, before/after saccade as start/endpoint. 
 %
 %   epoch_chan is channel to use for looking up epochs; defaults to XDAT
-%   
+%
+%   allow_missing (default false): if true, warn (instead of error) when no
+%   saccades were detected (ii_cfg.saccades is empty), and return ii_sacc
+%   with every field empty (0 rows). ii_cfg.saccades must still exist (i.e.,
+%   ii_findsaccades must have been run).
+%
 % ii_sacc will contain fields, each with one entry per saccade identified
 % in ii_cfg. Peak velocity, starttime, endtime, and duration are computed 
 % using ii_cfg.saccades. Only amplitude, startpoint, and endpoint are
@@ -73,6 +78,10 @@ if nargin < 6
     epoch_chan = 'XDAT';
 end
 
+if nargin < 7
+    allow_missing = false;
+end
+
 % go from ms to samples
 if isnumeric(startpoint_mode)
     startpoint_mode = ii_cfg.hz*startpoint_mode/1000;
@@ -90,10 +99,17 @@ elseif strcmpi(endpoint_mode,'fixation')
     end
 end
 
+if allow_missing
+    no_sac_fun = @(varargin) warning(varargin{:});
+else
+    no_sac_fun = @(varargin) error(varargin{:});
+end
 
 % make sure saccades have been defined...
-if ~ismember('saccades',fieldnames(ii_cfg)) || isempty(ii_cfg.saccades)
+if ~ismember('saccades',fieldnames(ii_cfg))
     error('iEye:ii_extractsaccades:saccadesNotDefined','No saccades found in ii_cfg, run ii_findsaccades.m');
+elseif isempty(ii_cfg.saccades)
+    no_sac_fun('iEye:ii_extractsaccades:noSaccades','No saccades detected (ii_cfg.saccades is empty)');
 end
 
 % create ii_sacc structure with fields:
@@ -130,6 +146,13 @@ if ismember('trialvec',fieldnames(ii_cfg))
     ii_sacc.trial_end   = nan(n_sacc,1); % trial label at beginning of saccade
 end
 
+% per-channel fields (defined here so they exist even with 0 saccades)
+for cc = 1:length(which_chans)
+    ii_sacc.(sprintf('%s_start',which_chans{cc})) = nan(n_sacc,1);
+    ii_sacc.(sprintf('%s_end',  which_chans{cc})) = nan(n_sacc,1);
+    ii_sacc.(sprintf('%s_trace',which_chans{cc})) = cell(n_sacc,1);
+end
+
 
 % TODO: most of this can be vectorized
 % start by defining all 'easy' fields
@@ -152,14 +175,7 @@ for ss = 1:size(ii_cfg.saccades,1)
     
     % loop over channels
     for cc = 1:length(which_chans)
-        
-        if ss == 1
-            ii_sacc.(sprintf('%s_start',which_chans{cc})) = nan(n_sacc,1);
-            ii_sacc.(sprintf('%s_end',  which_chans{cc})) = nan(n_sacc,1);
-            
-            ii_sacc.(sprintf('%s_trace',which_chans{cc})) = cell(n_sacc,1);
-        end
-        
+
         % START
         % if mode is fixation
         if strcmpi('fixation',startpoint_mode)

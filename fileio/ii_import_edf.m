@@ -25,6 +25,11 @@ function [ii_data,ii_cfg] = ii_import_edf(edf_file, ifg_file, data_file, varargi
 % channel separately, rather than packing into ii_data (for backwards
 % compatibility)
 %
+% ii_import_edf(edf_file, ifg_file, data_file, 'use_edf_rate') uses the
+% sampling rate recorded in the edf file (RECCFG message) and ignores the
+% rate in the .ifg file. By default, the two rates must match. Flags can be
+% combined, in any order.
+%
 % Misc info:
 % MONOCULAR ONLY AT THE MOMENT
 % Ignores corneal reflection flag information at the moment
@@ -40,6 +45,25 @@ function [ii_data,ii_cfg] = ii_import_edf(edf_file, ifg_file, data_file, varargi
 % Updated TCS 8/17/2017 & prior - saves out ii_data, ii_cfg structs instead
 % of channel variables. Can use ii_unpackdata to put all channels into base
 % workspace (not advised!)
+%
+% Updates 2025-2026 NT: 
+% - sort edf outputs because can't assume samples are
+% sorted by timestamp in newer versions of edf2asc
+% - fixed a bug that caused processing to silently fail and the edf file to
+% be delated if the edf extension was not lowercase.
+% - added a check that the sample rate in the edf file matches the sample
+% rate of the .ifg file. Really we don't need the rate in the .ifg file at
+% all, but letting it still be used for now.
+% - drops extra samples EyeLink writes between two regular samples (seen
+% during tracking loss). Because timestamps are discarded and each row is
+% treated as 1/hz s, these otherwise shift all later samples in time (up to
+% ~170 ms by the end of a run in some RDK data). Warns about any remaining
+% irregular sample intervals (e.g. gaps).
+% - added the 'use_edf_rate' flag to use the sampling rate from the edf
+% file and ignore the rate in the .ifg file. Messages are now read before
+% samples so the edf sampling rate is known when samples are processed.
+% Errors if the edf file has no RECCFG message, or if its RECCFG messages
+% disagree on the rate.
 
 if nargin < 1 || isempty(edf_file)
     [filename, pathname] = uigetfile('*.edf', 'Select EDF file');
@@ -74,6 +98,10 @@ if isempty(data_file)
     end    
 end
 
+% optional flags
+oldstyle = any(strcmpi(varargin,'oldstyle'));
+use_edf_rate = any(strcmpi(varargin,'use_edf_rate'));
+
 % GET CONFIG
 [nchan,lchan,schan,cfg] = ii_openifg(ifg_file);
 nchan = str2num(nchan);
@@ -83,36 +111,13 @@ lchan = textscan(lchan,'%s','delimiter',',');
 
 echan = nchan - 3;
 
-% EXTRACT SAMPLES
-% TCS: edf2asc =64 doesn't seem to work on 64bit macs, but old version is
-% fine
-%if strcmpi(computer(),'MACI64')
-%    [status,result] = system(['edf2asc_x86_64 -t -c -s -miss 0 ' edf_file]);
-%else
-[status,result] = system(['edf2asc -t -c -v -y -s -miss 0 ' edf_file]);
-%end
-disp(status);
-disp(result);
 %asc_samp_file = strrep(edf_file, '.edf', '.asc');
 %this is safer and is case-insensitive
 [edf_dir, edf_name] = fileparts(edf_file);
-asc_samp_file = fullfile(edf_dir, [edf_name '.asc']); 
-
-fid = fopen(asc_samp_file,'r');
-%M = textscan(fid,'%f %f %f %f %*s');
-sample_data = textscan(fid,'%f %f %f %f %*s %*s %*s %*s %*s');
-delete (asc_samp_file);
-sample_data = cell2mat(sample_data);
-
-% Added from Nathan *(fixes temporal order of events)
-sample_data = sortrows(sample_data, 1);
-%s_num = sample_data(:,1);
-%x = sample_data(:,2);
-%y = sample_data(:,3);
-%pupil = sample_data(:,4);
-
 
 % EXTRACT EVENTS
+% (before samples, so the sampling rate from the edf file is known when
+% processing samples)
 [status,result] = system(['edf2asc -t -c -v -y -e -miss 0 ' edf_file]);
 disp(status);
 disp(result);
@@ -143,12 +148,79 @@ Mess = Mess';
 [samp_n, remain] = strtok(remain);
 [varbl, vval] = strtok(remain);
 samp_n = str2double(samp_n);
+reccfg = vval(strcmp(varbl,'RECCFG')); %recording config string extracted before conversion to double
 vval = str2double(vval);
+
+%extract sample rate from RECCFG message(s), e.g. 'CR 500 2 1 R' (see
+%eyelink user manual for format spec)
+assert(~isempty(reccfg), "No RECCFG message in edf file; can't determine its sampling rate.");
+edf_hz = cellfun(@(s) sscanf(s,'%*s %f',1), reccfg);
+assert(all(edf_hz == edf_hz(1)), "RECCFG messages in edf file disagree on sampling rate (%s Hz).", ...
+    mat2str(unique(edf_hz).'));
+edf_hz = edf_hz(1);
+if use_edf_rate
+    schan = edf_hz;
+else
+    assert(edf_hz==schan, "Sampling rate of edf file (%d Hz) does not match sampling rate of .ifg file (%d Hz).", edf_hz, schan);
+end
 
 % Added from Nathan *(fixes temporal order of events)
 [samp_n, sort_I] = sort(samp_n);
 varbl = varbl(sort_I);
 vval = vval(sort_I);
+
+% EXTRACT SAMPLES
+% TCS: edf2asc =64 doesn't seem to work on 64bit macs, but old version is
+% fine
+%if strcmpi(computer(),'MACI64')
+%    [status,result] = system(['edf2asc_x86_64 -t -c -s -miss 0 ' edf_file]);
+%else
+[status,result] = system(['edf2asc -t -c -v -y -s -miss 0 ' edf_file]);
+%end
+disp(status);
+disp(result);
+asc_samp_file = fullfile(edf_dir, [edf_name '.asc']); 
+
+fid = fopen(asc_samp_file,'r');
+%M = textscan(fid,'%f %f %f %f %*s');
+sample_data = textscan(fid,'%f %f %f %f %*s %*s %*s %*s %*s');
+delete (asc_samp_file);
+sample_data = cell2mat(sample_data);
+
+% Added from Nathan *(fixes temporal order of events)
+sample_data = sortrows(sample_data, 1);
+
+% Drop extra samples. EyeLink sometimes writes an extra sample between two
+% regular ones (e.g. 1 ms after the previous sample at 500 Hz), seen only
+% during tracking loss. Timestamps are deleted below and every row is
+% treated as 1/hz s, so each extra sample would shift all later samples by
+% one sample period. A sample is extra if its neighbors are exactly one
+% sample period apart (e.g. t_3 - t_1 = 2ms for 500ms sampling rate, where
+% s/b = 4ms w/o an extra sample).
+samp_ms = 1000/schan;
+t = sample_data(:,1);
+is_extra = [false; t(3:end) - t(1:end-2) == samp_ms; false];
+n_extra = sum(is_extra);
+if any(sample_data(is_extra,4) > 0)
+    warning('ii_import_edf:extraSampleData','%i of %i extra samples dropped had pupil data', ...
+        sum(sample_data(is_extra,4) > 0), n_extra);
+end
+sample_data(is_extra,:) = [];
+
+% warn about remaining irregular sample intervals (e.g. gaps), which also
+% break the assumption that each row is 1/hz s
+dt_ms = diff(sample_data(:,1));
+is_irreg = dt_ms ~= samp_ms;
+if any(is_irreg)
+    warning('ii_import_edf:irregularSamples', ...
+        '%i irregular sample intervals remain (%s ms); timing after them will be off by %g ms in total', ...
+        sum(is_irreg), mat2str(unique(dt_ms(is_irreg)).'), sum(dt_ms(is_irreg) - samp_ms));
+end
+%s_num = sample_data(:,1);
+%x = sample_data(:,2);
+%y = sample_data(:,3);
+%pupil = sample_data(:,4);
+
 
 % SEARCH MSG EVENTS FOR VARIABLES XDAT, TarX and TarY
 for i = 4:nchan
@@ -216,6 +288,12 @@ ii_cfg.tsel = x*0;
 ii_cfg.tindex = 0;
 ii_cfg.saccades = [];
 ii_cfg.history{1} = ['EDF imported ', dt];
+if use_edf_rate
+    ii_cfg.history{end+1} = sprintf('ii_import_edf - using sampling rate from edf file (%g Hz), ignoring .ifg file', schan);
+end
+if n_extra > 0
+    ii_cfg.history{end+1} = sprintf('ii_import_edf - dropped %i extra samples between regular %g ms samples', n_extra, samp_ms);
+end
 ii_cfg.edf_file = edf_file;
 ii_cfg.microsacc =[]; 
 ii_data = eyedata;
@@ -230,7 +308,7 @@ ii_data = eyedata;
 
 % only save if you give a filename, or you don't and don't get output args
 if nargin >= 3 || (nargin<3 && nargout == 0)
-    if ~isempty(varargin) && strcmpi(varargin{1},'oldstyle')
+    if oldstyle
         save(data_file,'ii_cfg','edf_file','sample_data','ii_data');
         save(data_file,'-struct','eyedata','-append');
     else % default save state - ii_cfg and ii_data encapsulate all info
